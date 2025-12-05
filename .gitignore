@@ -103,3 +103,5 @@ yarn-error.log
 *.db-shm
 *.db-wal
 ExchangeMailData/
+*_log.txt
+test_results_*.txt
