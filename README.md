@@ -2,6 +2,15 @@
 
 ExchangeMail is a modern, self-hosted web-based email client and server built with ASP.NET Core. It provides a comprehensive solution for sending, receiving, and managing emails with a focus on user experience and extensibility.
 
+## Motivation
+
+This project was born out of the need to find a viable, self-hosted alternative to Microsoft Exchange Server On-Premises. With the release of [Exchange Server Subscription Edition (SE)](https://techcommunity.microsoft.com/blog/exchange/exchange-server-subscription-edition-se-is-now-available/4424924), Microsoft has shifted to a subscription-based licensing model, moving away from the traditional one-time purchase.
+
+As noted by [CodeTwo](https://www.codetwo.com/admins-blog/exchange-server-subscription-edition/):
+> "It’s no longer a one-time purchase with a strongly suggested upgrade required every few years when the server version reaches end of life. The only way to have the new Exchange Server with a free license is to use it in a hybrid environment... The upside is that you won’t have to migrate your underlying on-premises server to prevent Exchange Online from “sabotaging” your mail flow."
+
+ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual, and self-controlled email infrastructure without recurring subscription fees or forced hybrid dependencies.
+
 ## Features
 
 ### 📧 Core Email Functionality

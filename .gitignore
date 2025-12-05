@@ -104,7 +104,9 @@ yarn-error.log
 *.db-wal
 ExchangeMailData/
 *_log.txt
-test_results_*.txt
+*.log
+test_results*.txt
+test_output.txt
 run_log.txt
 users.json
 ExchangeMail.Web/users.json
