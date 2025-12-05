@@ -106,3 +106,5 @@ ExchangeMailData/
 *_log.txt
 test_results_*.txt
 run_log.txt
+users.json
+ExchangeMail.Web/users.json
