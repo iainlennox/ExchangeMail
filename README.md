@@ -35,17 +35,14 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 ## Screenshots
 
 ### Inbox View
-![Inbox View]
 <img width="1595" height="994" alt="image" src="https://github.com/user-attachments/assets/3482e10d-7f8b-4012-89dc-4698514c80ea" />
 
 
 ### Compose Email
-![Compose Email]
 <img width="1601" height="1002" alt="image" src="https://github.com/user-attachments/assets/b765d7b4-aaad-4039-a72f-6f14b7a73496" />
 
 
 ### Settings & Rules
-![Settings and Rules]
 <img width="1603" height="997" alt="image" src="https://github.com/user-attachments/assets/244cfa1e-20f9-4b6a-9e12-dcda56dea2d5" />
 
 
