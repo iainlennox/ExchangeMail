@@ -105,3 +105,4 @@ yarn-error.log
 ExchangeMailData/
 *_log.txt
 test_results_*.txt
+run_log.txt
