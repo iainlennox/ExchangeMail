@@ -23,6 +23,17 @@ ExchangeMail is a modern, self-hosted web-based email client and server built wi
 ### 👥 Contacts
 -   **Contact Management**: Store and manage your personal address book.
 
+## Screenshots
+
+### Inbox View
+![Inbox View](Images/inbox_view.png)
+
+### Compose Email
+![Compose Email](Images/compose_email.png)
+
+### Settings & Rules
+![Settings and Rules](Images/settings_rules.png)
+
 ## Tech Stack
 
 -   **Framework**: ASP.NET Core 9.0 (MVC)
