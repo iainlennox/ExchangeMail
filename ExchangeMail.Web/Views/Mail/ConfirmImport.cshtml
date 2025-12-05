@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Confirm Import";
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Confirm Import</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>File Name:</strong> @ViewBag.FileName</p>
+            <p><strong>Total Messages Found:</strong> @ViewBag.TotalMessages</p>
+
+            <div class="alert alert-info">
+                Please confirm that you want to import these messages. The import process will run in the background.
+            </div>
+
+            @if (ViewBag.FolderDebugInfo != null)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <a class="btn btn-link" data-bs-toggle="collapse" href="#debugInfo" role="button"
+                        aria-expanded="false" aria-controls="debugInfo">
+                            Show Folder Structure (Debug)
+                        </a>
+                    </div>
+                    <div class="collapse" id="debugInfo">
+                        <div class="card-body">
+                            <pre style="max-height: 300px; overflow-y: auto;">
+                                @foreach (var line in ViewBag.FolderDebugInfo)
+                                {
+                                    @line
+                                }
+                                </pre>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <form asp-action="ConfirmImport" method="post">
+                <input type="hidden" name="tempFilePath" value="@ViewBag.TempFilePath" />
+                <input type="hidden" name="fileName" value="@ViewBag.FileName" />
+                <input type="hidden" name="totalMessages" value="@ViewBag.TotalMessages" />
+
+                <button type="submit" class="btn btn-primary">Start Import</button>
+                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,227 @@
+<style>
+    #editor-container {
+        height: 300px;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color);
+    }
+
+    /* Dark mode overrides for Quill Toolbar */
+    [data-bs-theme="dark"] .ql-toolbar {
+        background-color: var(--bs-body-bg);
+        border-color: var(--bs-border-color);
+    }
+
+    [data-bs-theme="dark"] .ql-container {
+        border-color: var(--bs-border-color);
+    }
+
+    [data-bs-theme="dark"] .ql-stroke {
+        stroke: var(--bs-body-color) !important;
+    }
+
+    [data-bs-theme="dark"] .ql-fill {
+        fill: var(--bs-body-color) !important;
+    }
+
+    [data-bs-theme="dark"] .ql-picker {
+        color: var(--bs-body-color) !important;
+    }
+</style>
+
+<h1>Compose Email</h1>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @ViewBag.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form asp-action="Send" method="post" id="compose-form" enctype="multipart/form-data" class="compose-container">
+    <input type="hidden" name="id" value="@ViewBag.DraftId" />
+    <div class="mb-3">
+        <div class="d-flex justify-content-between">
+            <label for="to" class="form-label">To</label>
+            <a href="#" id="toggle-cc-bcc" class="text-decoration-none small" tabindex="-1">Cc/Bcc</a>
+        </div>
+        <div class="position-relative">
+            <input type="email" class="form-control" id="to" name="to" value="@ViewBag.To" required autocomplete="off">
+            <div id="suggestions-container" class="list-group position-absolute w-100"
+                style="z-index: 1000; display: none;"></div>
+        </div>
+    </div>
+    <div class="mb-3 d-none" id="cc-container">
+        <label for="cc" class="form-label">Cc</label>
+        <input type="text" class="form-control" id="cc" name="cc" placeholder="Comma separated addresses">
+    </div>
+    <div class="mb-3 d-none" id="bcc-container">
+        <label for="bcc" class="form-label">Bcc</label>
+        <input type="text" class="form-control" id="bcc" name="bcc" placeholder="Comma separated addresses">
+    </div>
+    <div class="mb-3">
+        <label for="subject" class="form-label">Subject</label>
+        <input type="text" class="form-control" id="subject" name="subject" value="@ViewBag.Subject" required>
+    </div>
+    <div class="mb-3">
+        <label for="attachments" class="form-label">Attachments</label>
+        <input type="file" class="form-control" id="attachments" name="attachments" multiple>
+    </div>
+    <div class="mb-3">
+        <label for="body" class="form-label">Message</label>
+        <input type="hidden" name="body" id="body">
+        <div id="editor-container">@Html.Raw(ViewBag.Body)</div>
+    </div>
+    <button type="button" class="btn btn-primary" id="send-button">
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="send-spinner"></span>
+        <span id="send-text">Send</span>
+    </button>
+    <button type="button" class="btn btn-outline-secondary" id="save-draft-button">
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"
+            id="draft-spinner"></span>
+        <span id="draft-text">Save Draft</span>
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+<script>
+    (function () {
+        var quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['clean']
+                ]
+            }
+        });
+
+        var form = document.getElementById('compose-form');
+        var isSubmitting = false;
+
+        document.getElementById('send-button').onclick = function () {
+            if (isSubmitting) return;
+
+            // Manual validation
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            isSubmitting = true;
+            var btn = document.getElementById('send-button');
+            var spinner = document.getElementById('send-spinner');
+            var text = document.getElementById('send-text');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            text.textContent = 'Sending...';
+
+            var body = document.querySelector('input[name=body]');
+            body.value = quill.root.innerHTML;
+
+            form.submit();
+        };
+
+        document.getElementById('save-draft-button').onclick = function () {
+            var body = document.querySelector('input[name=body]');
+            body.value = quill.root.innerHTML;
+
+            var btn = document.getElementById('save-draft-button');
+            var spinner = document.getElementById('draft-spinner');
+            var text = document.getElementById('draft-text');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            text.textContent = 'Saving...';
+
+            var formData = new FormData(form);
+
+            fetch('@Url.Action("SaveDraft", "Mail")', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Optional: Show a toast or success message
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        text.textContent = 'Save Draft';
+                        showModalAlert('Draft saved successfully');
+                    } else {
+                        showModalAlert('Failed to save draft');
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        text.textContent = 'Save Draft';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showModalAlert('An error occurred while saving the draft');
+                    btn.disabled = false;
+                    spinner.classList.add('d-none');
+                    text.textContent = 'Save Draft';
+                });
+        };
+
+        document.getElementById('toggle-cc-bcc').onclick = function (e) {
+            e.preventDefault();
+            var cc = document.getElementById('cc-container');
+            var bcc = document.getElementById('bcc-container');
+            cc.classList.toggle('d-none');
+            bcc.classList.toggle('d-none');
+
+            if (!cc.classList.contains('d-none')) {
+                document.getElementById('cc').focus();
+            }
+        };
+
+        var toInput = document.getElementById('to');
+        var suggestionsContainer = document.getElementById('suggestions-container');
+
+        toInput.addEventListener('input', function () {
+            var query = this.value;
+            // Only search if we have something that looks like a name start, not if it's already an email
+            if (query.length < 2 || query.includes('@@')) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            fetch('/Mail/SearchContacts?query=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsContainer.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            var a = document.createElement('a');
+                            a.href = '#';
+                            a.className = 'list-group-item list-group-item-action';
+                            a.textContent = item.name + ' <' + item.email + '>';
+                            a.onclick = function (e) {
+                                e.preventDefault();
+                                toInput.value = item.email;
+                                suggestionsContainer.style.display = 'none';
+                            };
+                            suggestionsContainer.appendChild(a);
+                        });
+                        suggestionsContainer.style.display = 'block';
+                    } else {
+                        suggestionsContainer.style.display = 'none';
+                    }
+                });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target !== toInput) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    })();
+</script>

@@ -1,0 +1,72 @@
+@using MimeKit
+@model MimeMessage
+
+@{
+    ViewData["Title"] = Model.Subject;
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@Model.Subject</h5>
+        <div>
+            @{
+                var dbId = Model.Headers["X-Db-Id"];
+            }
+            <a asp-action="Reply" asp-route-id="@dbId" class="btn btn-outline-primary btn-sm">Reply</a>
+            <a asp-action="Forward" asp-route-id="@dbId" class="btn btn-outline-secondary btn-sm">Forward</a>
+            <a asp-action="Download" asp-route-id="@dbId" class="btn btn-outline-info btn-sm">Download Source</a>
+            <a asp-action="Delete" asp-route-id="@dbId" class="btn btn-outline-danger btn-sm">Delete</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <strong>From:</strong> @Model.From <br />
+            <strong>To:</strong> @Model.To <br />
+            <strong>Date:</strong> @Model.Date.ToString("g")
+        </div>
+        <hr />
+        <div class="email-body">
+            @if (!string.IsNullOrEmpty(Model.HtmlBody))
+            {
+                <div class="border p-3 bg-white text-dark">
+                    @Html.Raw(Model.HtmlBody)
+                </div>
+            }
+            else
+            {
+                <pre style="white-space: pre-wrap; font-family: inherit;">@Model.TextBody</pre>
+            }
+        </div>
+
+        @if (Model.Attachments.Any())
+        {
+            <hr />
+            <h6>Attachments:</h6>
+            <ul class="list-group">
+                @foreach (var attachment in Model.Attachments)
+                {
+                    var fileName = attachment.ContentDisposition?.FileName ?? attachment.ContentType.Name ?? "unnamed";
+                    var attachmentDbId = Model.Headers["X-Db-Id"];
+                    <li class="list-group-item">
+                        <a asp-action="DownloadAttachment" asp-route-id="@attachmentDbId" asp-route-fileName="@fileName">
+                            @fileName
+                        </a>
+                        <span class="text-muted small">(@attachment.ContentType.MimeType)</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#headersCollapse"
+        aria-expanded="false" aria-controls="headersCollapse">
+        View Headers
+    </button>
+    <div class="collapse" id="headersCollapse">
+        <div class="card card-body bg-body-tertiary">
+            <pre>@string.Join("\n", Model.Headers.Select(h => $"{h.Field}: {h.Value}"))</pre>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ExchangeMail.Core -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Core\bin\Debug\net10.0\ExchangeMail.Core.dll
+  ExchangeMail.Server -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Server\bin\Debug\net10.0\ExchangeMail.Server.dll
+  ExchangeMail.Web -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\bin\Debug\net10.0\ExchangeMail.Web.dll
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(46,24): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(47,62): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\ContactsControllerTests.cs(41,63): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(81,46): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(231,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(234,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(237,22): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(244,44): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(246,44): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,55): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,47): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(268,43): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(288,47): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(289,68): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+  ExchangeMail.Tests -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll
+
+Build succeeded.
+
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(46,24): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(47,62): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\ContactsControllerTests.cs(41,63): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(81,46): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(231,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(234,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(237,22): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(244,44): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(246,44): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,55): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,47): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(268,43): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(288,47): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(289,68): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+    14 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.46

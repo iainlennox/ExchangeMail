@@ -1,0 +1,18 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ExchangeMail.Core -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Core\bin\Debug\net10.0\ExchangeMail.Core.dll
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(819,45): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.GetMessageAsync(string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(829,35): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.MoveMessageAsync(string, string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(840,45): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.GetMessageAsync(string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(850,35): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.MoveMessageAsync(string, string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+
+Build FAILED.
+
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(819,45): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.GetMessageAsync(string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(829,35): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.MoveMessageAsync(string, string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(840,45): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.GetMessageAsync(string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\Controllers\MailController.cs(850,35): error CS7036: There is no argument given that corresponds to the required parameter 'userEmail' of 'IMailRepository.MoveMessageAsync(string, string, string)' [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\ExchangeMail.Web.csproj]
+    0 Warning(s)
+    4 Error(s)
+
+Time Elapsed 00:00:02.20

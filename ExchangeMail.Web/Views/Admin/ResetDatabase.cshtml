@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Reset Database";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>DANGER ZONE: Reset
+                        Database</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">Warning: Irreversible Action!</h4>
+                        <p>
+                            You are about to reset the ExchangeMail database. This action will:
+                        </p>
+                        <ul>
+                            <li><strong>Delete all messages</strong></li>
+                            <li><strong>Delete all folders</strong></li>
+                            <li><strong>Delete all contacts</strong></li>
+                            <li><strong>Delete all logs</strong></li>
+                            <li><strong>Delete all users (including this admin account)</strong></li>
+                            <li><strong>Clear Safe/Blocked sender lists</strong></li>
+                        </ul>
+                        <p>
+                            Configuration settings (SMTP, Domain, Port) will be <strong>preserved</strong>.
+                        </p>
+                        <hr>
+                        <p class="mb-0">
+                            Once confirmed, you will be logged out and redirected to the Setup wizard to create a new
+                            admin account.
+                        </p>
+                    </div>
+
+                    <form asp-action="PerformResetDatabase" method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label for="confirmation" class="form-label">To confirm, type <strong>I understand</strong>
+                                in the box below:</label>
+                            <input type="text" class="form-control" id="confirmation" name="confirmation" required
+                                autocomplete="off">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="bi bi-trash3-fill me-2"></i>Confirm Reset Database
+                            </button>
+                            <a asp-action="Settings" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

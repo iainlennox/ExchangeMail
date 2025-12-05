@@ -1,0 +1,39 @@
+@{
+    ViewData["Title"] = "Welcome Setup - Step 2";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Create Admin Account</h2>
+                    <span class="badge bg-white text-success border border-white">Step 3 of 4</span>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Almost done! Create your first administrator account.</p>
+                    <hr />
+                    <form asp-action="AddAccount" method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required />
+                            <div class="form-text">This will be your login username.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">Finish Setup</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

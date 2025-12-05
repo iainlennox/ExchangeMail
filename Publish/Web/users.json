@@ -1,0 +1,12 @@
+[
+  {
+    "Username": "admin",
+    "Password": "Password!",
+    "IsAdmin": true
+  },
+  {
+    "Username": "iain@lennoxfamily.net",
+    "Password": "FinePix2004!!",
+    "IsAdmin": true
+  }
+]

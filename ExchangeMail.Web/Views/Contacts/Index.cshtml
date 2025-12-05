@@ -1,0 +1,64 @@
+@model IEnumerable<ExchangeMail.Core.Data.Entities.ContactEntity>
+
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<div class="mail-grid">
+    <!-- Sidebar -->
+    <div class="mail-sidebar">
+        <partial name="~/Views/Mail/_Sidebar.cshtml" />
+    </div>
+
+    <!-- Contact List -->
+    <div class="mail-list">
+        <partial name="_ContactList" model="Model" />
+    </div>
+
+    <!-- Reading Pane -->
+    <div class="mail-reading-pane" id="readingPane">
+        <partial name="_ContactDetails" model="null" />
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function loadContactDetails(id, element) {
+        // Update active state
+        $('.mail-list-item').removeClass('active');
+        $(element).addClass('active');
+
+        // Load content
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+
+        $.get('@Url.Action("DetailsPartial", "Contacts")', { id: id })
+            .done(function (data) {
+                $('#readingPane').html(data);
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading contact details.</div>');
+            });
+    }
+
+    // Responsive Helpers
+    function showList() {
+        $('body').removeClass('show-reading-pane');
+        $('.mail-list-item').removeClass('active'); // Deselect
+    }
+
+    function showReadingPane() {
+        $('body').addClass('show-reading-pane');
+    }
+
+    // Reuse the loadCompose from Mail/Index if possible, or redefine it here if needed for the sidebar button
+    function loadCompose() {
+        window.location.href = '@Url.Action("Index", "Mail")?action=compose';
+    }
+
+    function createNewFolder() {
+        // Placeholder as this is contacts view, maybe redirect to mail or show alert
+        showModalAlert("Please go to Mail view to manage folders.");
+    }
+</script>
+}

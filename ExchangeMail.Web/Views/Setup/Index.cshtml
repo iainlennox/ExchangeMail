@@ -1,0 +1,76 @@
+@model ExchangeMail.Web.Models.SetupViewModel
+@{
+    ViewData["Title"] = "Welcome Setup - Step 1";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">Server Configuration</h2>
+                    <span class="badge bg-white text-primary border border-white">Step 2 of 4</span>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Let's get your server set up. Please configure your domain and upstream SMTP
+                        settings.</p>
+                    <hr />
+                    <form asp-action="Index" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <h4 class="mb-3">Domain Configuration</h4>
+                        <div class="mb-3">
+                            <label asp-for="Domain" class="form-label">Domain Name</label>
+                            <input asp-for="Domain" class="form-control" placeholder="example.com" />
+                            <span asp-validation-for="Domain" class="text-danger"></span>
+                            <div class="form-text">The domain this server will accept emails for.</div>
+                        </div>
+
+                        <hr />
+                        <h4 class="mb-3">Upstream SMTP Configuration (Optional)</h4>
+                        <p class="text-muted small">Used for relaying outbound emails.</p>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="SmtpHost" class="form-label">SMTP Host</label>
+                                <input asp-for="SmtpHost" class="form-control" placeholder="smtp.example.com" />
+                                <span asp-validation-for="SmtpHost" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SmtpPort" class="form-label">Port</label>
+                                <input asp-for="SmtpPort" class="form-control" />
+                                <span asp-validation-for="SmtpPort" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SmtpUsername" class="form-label">Username</label>
+                            <input asp-for="SmtpUsername" class="form-control" />
+                            <span asp-validation-for="SmtpUsername" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SmtpPassword" class="form-label">Password</label>
+                            <input asp-for="SmtpPassword" class="form-control" type="password" />
+                            <span asp-validation-for="SmtpPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="SmtpEnableSsl" class="form-check-input" />
+                            <label asp-for="SmtpEnableSsl" class="form-check-label">Enable SSL/TLS</label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary btn-lg">Next: Create Admin Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

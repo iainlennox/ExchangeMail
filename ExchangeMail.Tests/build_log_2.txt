@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ExchangeMail.Core -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Core\bin\Debug\net10.0\ExchangeMail.Core.dll
+  ExchangeMail.Web -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\bin\Debug\net10.0\ExchangeMail.Web.dll
+  ExchangeMail.Tests -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.38

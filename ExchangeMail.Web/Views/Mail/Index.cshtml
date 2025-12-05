@@ -1,0 +1,556 @@
+@using MimeKit
+@{
+    ViewData["Title"] = "Inbox";
+}
+
+<div class="mail-grid">
+    <!-- Sidebar -->
+    <div class="mail-sidebar">
+        <partial name="_Sidebar" />
+    </div>
+
+    <!-- Message List -->
+    <div class="mail-list">
+        <partial name="_MessageList" model="Model" />
+    </div>
+
+    <!-- Reading Pane -->
+    <div class="mail-reading-pane" id="readingPane">
+        <partial name="_ReadingPane" model="null" />
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function loadMessage(id, elementOrShowBlocked) {
+        var showBlocked = false;
+        var element = null;
+
+        if (typeof elementOrShowBlocked === 'boolean') {
+            showBlocked = elementOrShowBlocked;
+        } else {
+            element = elementOrShowBlocked;
+        }
+
+        if (element) {
+            // Update active state
+            $('.mail-list-item').removeClass('active');
+            $(element).addClass('active');
+            $(element).removeClass('unread'); // Visually mark as read immediately
+        }
+
+        // Check if we are in Drafts folder
+        var currentFolder = '@ViewBag.Folder';
+        if (currentFolder === 'Drafts') {
+            loadCompose(id);
+            return;
+        }
+
+        // Load content
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+
+        $.get('@Url.Action("MessagePartial", "Mail")', { id: id, showBlocked: showBlocked })
+            .done(function (data) {
+                $('#readingPane').html(data);
+                if (localStorage.getItem('messageDarkMode') === 'true') {
+                    $('#btn-message-dark-mode').addClass('active');
+                }
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading message.</div>');
+            });
+    }
+
+    function loadCompose(id) {
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+
+        var url = '@Url.Action("Compose", "Mail")';
+        var data = {};
+        if (id) {
+            data.id = id;
+        }
+
+        $.get(url, data)
+            .done(function (data) {
+                $('#readingPane').html(data);
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading compose view.</div>');
+            });
+    }
+
+    function loadReply(id) {
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+        $.get('@Url.Action("Reply", "Mail")', { id: id })
+            .done(function (data) {
+                $('#readingPane').html(data);
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading reply view.</div>');
+            });
+    }
+
+    function loadForward(id) {
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+        $.get('@Url.Action("Forward", "Mail")', { id: id })
+            .done(function (data) {
+                $('#readingPane').html(data);
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading forward view.</div>');
+            });
+    }
+
+    function loadReplyAll(id) {
+        showReadingPane();
+        $('#readingPane').html('<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>');
+        $.get('@Url.Action("ReplyAll", "Mail")', { id: id })
+            .done(function (data) {
+                $('#readingPane').html(data);
+            })
+            .fail(function () {
+                $('#readingPane').html('<div class="text-danger p-4">Error loading reply all view.</div>');
+            });
+    }
+
+    async function deleteMessage(id, confirmMessage) {
+        var msg = confirmMessage || 'Are you sure you want to delete this message?';
+        if (await showModalConfirm(msg)) {
+            $.post('@Url.Action("Delete", "Mail")', { id: id })
+                .done(function () {
+                    // Remove from list or reload
+                    $('.mail-list-item[data-id="' + id + '"]').remove();
+                    // If reading pane was showing this message, clear it
+                    $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="bi bi-envelope-open fs-1 mb-3"></i><p>Select an item to read</p></div>');
+                })
+                .fail(function () {
+                    showModalAlert('Error deleting message.');
+                });
+        }
+    }
+
+    function markAsJunk(id) {
+        $.post('@Url.Action("MarkAsJunk", "Mail")', { id: id })
+            .done(function () {
+                $('.mail-list-item[data-id="' + id + '"]').remove();
+                $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="bi bi-envelope-open fs-1 mb-3"></i><p>Select an item to read</p></div>');
+            })
+            .fail(function () {
+                showModalAlert('Error marking as junk.');
+            });
+    }
+
+    function markAsNotJunk(id) {
+        $.post('@Url.Action("MarkAsNotJunk", "Mail")', { id: id })
+            .done(function () {
+                $('.mail-list-item[data-id="' + id + '"]').remove();
+                $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="bi bi-envelope-open fs-1 mb-3"></i><p>Select an item to read</p></div>');
+            })
+            .fail(function () {
+                showModalAlert('Error marking as not junk.');
+            });
+    }
+
+    $(document).on('submit', '#compose-form', function (e) {
+        e.preventDefault();
+        console.log('Compose form submitted');
+        var form = $(this)[0]; // Get the DOM element
+        var actionUrl = $(this).attr('action');
+        console.log('Action URL:', actionUrl);
+
+        var formData = new FormData(form);
+
+        $.ajax({
+            url: actionUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function () {
+                console.log('Submission successful');
+                $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-success"><i class="bi bi-check-circle fs-1 mb-3"></i><p>Message sent successfully</p></div>');
+            },
+            error: function (xhr, status, error) {
+                console.error('Submission failed:', status, error);
+                showModalAlert('Error sending message.');
+            }
+        });
+    });
+
+    $(document).on('click', '#compose-form .btn-secondary', function (e) {
+        if ($('#readingPane').find('#compose-form').length > 0) {
+            e.preventDefault();
+            $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="bi bi-envelope-open fs-1 mb-3"></i><p>Select an item to read</p></div>');
+        }
+    });
+
+    // Attach drop event listeners
+    $(document).ready(function () {
+        $('.droppable-folder').on('dragover', allowDrop);
+        $('.droppable-folder').on('drop', drop);
+    });
+
+    async function createNewFolder() {
+        var folderName = await showModalPrompt("Enter new folder name:");
+        if (folderName) {
+            $.post('@Url.Action("CreateFolder", "Mail")', { name: folderName })
+                .done(function () {
+                    location.reload();
+                })
+                .fail(function () {
+                    showModalAlert("Failed to create folder.");
+                });
+        }
+    }
+
+    // Context Menu Logic
+    $(document).ready(function () {
+        var contextMenu = $('<div id="context-menu" class="dropdown-menu" style="display:none; position:fixed; z-index:1000;">' +
+            '<a class="dropdown-item" href="#" id="ctx-reply"><i class="bi bi-reply me-2"></i>Reply</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-reply-all"><i class="bi bi-reply-all me-2"></i>Reply all</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-forward"><i class="bi bi-forward me-2"></i>Forward</a>' +
+            '<div class="dropdown-divider"></div>' +
+            '<a class="dropdown-item" href="#" id="ctx-delete"><i class="bi bi-trash me-2"></i>Delete</a>' +
+            '<div class="dropdown-divider"></div>' +
+            '<h6 class="dropdown-header">Move/Copy</h6>' +
+            '<a class="dropdown-item" href="#" id="ctx-move">Move to...</a>' +
+            '<div id="ctx-move-options" style="display:none;" class="bg-body-tertiary border rounded mx-2"></div>' +
+            '<a class="dropdown-item" href="#" id="ctx-copy">Copy to...</a>' +
+            '<div id="ctx-copy-options" style="display:none;" class="bg-body-tertiary border rounded mx-2"></div>' +
+            '</div>');
+        $('body').append(contextMenu);
+
+        var selectedMessageId = null;
+
+        $(document).on('contextmenu', '.mail-list-item', function (e) {
+            e.preventDefault();
+            selectedMessageId = $(this).data('id');
+            // Populate folders
+            var folders = [];
+            $('.list-group-item').each(function () {
+                var folderId = $(this).data('folder');
+                if (!folderId) {
+                    var href = $(this).attr('href');
+                    if (href && href.indexOf('folder=') > -1) {
+                        folderId = href.split('=')[1];
+                    }
+                }
+
+                if (folderId && folderId !== 'Create New Folder') {
+                    folders.push(decodeURIComponent(folderId));
+                }
+            });
+            // Filter duplicates
+            folders = [...new Set(folders)];
+
+            // Build Submenus
+            console.log("Context Menu Folders:", folders);
+            var moveHtml = '';
+            var copyHtml = '';
+            folders.forEach(function (f) {
+                // Encode for data attribute, decode for display
+                var display = f;
+                var value = encodeURIComponent(f);
+                moveHtml += '<a class="dropdown-item ctx-action" href="#" data-action="move" data-folder="' + value + '">' + display + '</a>';
+                copyHtml += '<a class="dropdown-item ctx-action" href="#" data-action="copy" data-folder="' + value + '">' + display + '</a>';
+            });
+
+            if (folders.length === 0) {
+                moveHtml = '<span class="dropdown-item-text text-muted">No folders found</span>';
+                copyHtml = '<span class="dropdown-item-text text-muted">No folders found</span>';
+            }
+
+            $('#ctx-move-options').html(moveHtml);
+            $('#ctx-copy-options').html(copyHtml);
+
+            contextMenu.css({
+                top: e.pageY + 'px',
+                left: e.pageX + 'px',
+                display: 'block'
+            });
+        });
+
+        // Close menu when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#context-menu').length) {
+                contextMenu.hide();
+                $('#ctx-move-options').hide();
+                $('#ctx-copy-options').hide();
+            }
+        });
+
+        // Toggle submenus on click (and hover)
+        $('#ctx-move').on('click mouseenter', function (e) {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent document click from closing
+            $('#ctx-move-options').show();
+            $('#ctx-copy-options').hide();
+        });
+
+        $('#ctx-copy').on('click mouseenter', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#ctx-copy-options').show();
+            $('#ctx-move-options').hide();
+        });
+
+        // Handle Standard Actions
+        $('#ctx-reply').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) loadReply(selectedMessageId);
+        });
+
+        $('#ctx-reply-all').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) loadReplyAll(selectedMessageId);
+        });
+
+        $('#ctx-forward').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) loadForward(selectedMessageId);
+        });
+
+        $('#ctx-delete').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) deleteMessage(selectedMessageId);
+        });
+
+        // Handle Move/Copy Actions
+        $(document).on('click', '.ctx-action', function (e) {
+            e.preventDefault();
+
+            var action = $(this).data('action');
+            var folder = $(this).data('folder');
+            var url = action === 'move' ? '@Url.Action("MoveMessage", "Mail")' : '@Url.Action("CopyMessage", "Mail")';
+
+            console.log("Action: " + action + ", Folder: " + folder + ", ID: " + selectedMessageId);
+
+            if (selectedMessageId && folder) {
+                $.post(url, { id: selectedMessageId, folder: folder })
+                    .done(function () {
+                        location.reload();
+                    })
+                    .fail(function () {
+                        showModalAlert("Failed to " + action + " message.");
+                    });
+            }
+        });
+    });
+
+    // Responsive Helpers
+    function showList() {
+        $('body').removeClass('show-reading-pane');
+        $('.mail-list-item').removeClass('active'); // Deselect
+    }
+
+
+    $(document).on('submit', '#compose-form', function (e) {
+        e.preventDefault();
+        console.log('Compose form submitted');
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        console.log('Action URL:', actionUrl);
+
+        $.post(actionUrl, form.serialize())
+            .done(function () {
+                console.log('Submission successful');
+                $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-success"><i class="bi bi-check-circle fs-1 mb-3"></i><p>Message sent successfully</p></div>');
+                // Optional: Reload message list if needed, but not strictly required by prompt
+            })
+            .fail(function (xhr, status, error) {
+                console.error('Submission failed:', status, error);
+                showModalAlert('Error sending message.');
+            });
+    });
+
+    $(document).on('click', '#compose-form .btn-secondary', function (e) {
+        if ($('#readingPane').find('#compose-form').length > 0) {
+            e.preventDefault();
+            $('#readingPane').html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="bi bi-envelope-open fs-1 mb-3"></i><p>Select an item to read</p></div>');
+        }
+    });
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.dataset.id);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        var folder = $(ev.target).closest('.droppable-folder').data('folder');
+
+        if (folder && data) {
+            $.post('@Url.Action("MoveMessage", "Mail")', { id: data, folder: folder })
+                .done(function () {
+                    location.reload();
+                })
+                .fail(function () {
+                    showModalAlert("Failed to move message.");
+                });
+        }
+    }
+
+    // Attach drop event listeners
+    $(document).ready(function () {
+        $('.droppable-folder').on('dragover', allowDrop);
+        $('.droppable-folder').on('drop', drop);
+    });
+
+    async function createNewFolder() {
+        var folderName = await showModalPrompt("Enter new folder name:");
+        if (folderName) {
+            $.post('@Url.Action("CreateFolder", "Mail")', { name: folderName })
+                .done(function () {
+                    location.reload();
+                })
+                .fail(function () {
+                    showModalAlert("Failed to create folder.");
+                });
+        }
+    }
+
+
+
+    // Responsive Helpers
+    function showList() {
+        $('body').removeClass('show-reading-pane');
+        $('.mail-list-item').removeClass('active'); // Deselect
+    }
+
+    function showReadingPane() {
+        $('body').addClass('show-reading-pane');
+    }
+
+    function toggleMessageDarkMode() {
+        var iframe = document.querySelector('.email-body-container iframe');
+        var btn = document.getElementById('btn-message-dark-mode');
+        if (!iframe) return;
+
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc) return;
+
+        var styleId = 'dark-mode-style';
+        var existingStyle = doc.getElementById(styleId);
+
+        if (existingStyle) {
+            existingStyle.remove();
+            localStorage.setItem('messageDarkMode', 'false');
+            if (btn) btn.classList.remove('active');
+        } else {
+            var style = doc.createElement('style');
+            style.id = styleId;
+            style.textContent = `
+                html { filter: invert(1) hue-rotate(180deg); background-color: white; }
+                img, video, iframe { filter: invert(1) hue-rotate(180deg); }
+            `;
+            doc.head.appendChild(style);
+            localStorage.setItem('messageDarkMode', 'true');
+            if (btn) btn.classList.add('active');
+        }
+    }
+
+    function applyMessageDarkMode(iframe) {
+        if (localStorage.getItem('messageDarkMode') === 'true') {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (!doc) return;
+
+            var styleId = 'dark-mode-style';
+            if (!doc.getElementById(styleId)) {
+                var style = doc.createElement('style');
+                style.id = styleId;
+                style.textContent = `
+                    html { filter: invert(1) hue-rotate(180deg); background-color: white; }
+                    img, video, iframe { filter: invert(1) hue-rotate(180deg); }
+                `;
+                doc.head.appendChild(style);
+            }
+        }
+    }
+
+    async function markAllAsRead() {
+        if (await showModalConfirm('Are you sure you want to mark all messages in this folder as read?')) {
+            var folder = '@ViewBag.Folder';
+            $.post('@Url.Action("MarkAllAsRead", "Mail")', { folder: folder })
+                .done(function () {
+                    location.reload();
+                })
+                .fail(function () {
+                    showModalAlert('Failed to mark all as read.');
+                });
+        }
+    }
+</script>
+
+
+
+<script>
+
+    // Real-time updates
+    var currentFolder = '@ViewBag.Folder';
+
+    // Let's use a proper short notification sound (Base64 of a simple 'ding')
+    // Source: Simple generated sine wave or similar.
+    // For this example, I'll use a very short, generic notification sound string.
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playNotificationSound() {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        var oscillator = audioCtx.createOscillator();
+        var gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(500, audioCtx.currentTime); // value in hertz
+        oscillator.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function refreshMessageList() {
+        var activeId = $('.mail-list-item.active').data('id');
+
+        $.get('@Url.Action("MessageList", "Mail")', { folder: currentFolder })
+            .done(function (data) {
+                $('.mail-list').html(data);
+                if (activeId) {
+                    // Restore selection
+                    $('.mail-list-item[data-id="' + activeId + '"]').addClass('active');
+                }
+            });
+    }
+
+    // Listen for SignalR event
+    document.addEventListener('newMailReceived', function (e) {
+        console.log("New mail received via SignalR", e.detail);
+
+        // Only refresh if we are on the first page and not searching
+        var searchString = '@ViewBag.SearchString';
+        var page = '@ViewBag.Page';
+
+        if (!searchString && page === '1') {
+            playNotificationSound();
+            refreshMessageList();
+        }
+    });
+
+</script>
+}

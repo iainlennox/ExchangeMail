@@ -1,0 +1,92 @@
+@model IEnumerable<ExchangeMail.Core.Data.Entities.MailRuleEntity>
+
+@{
+    ViewData["Title"] = "Mail Rules";
+    var folders = ViewBag.Folders as List<string>;
+}
+
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="m-0">Mail Rules</h5>
+    </div>
+
+    <div class="row p-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Existing Rules
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover m-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Priority</th>
+                                <th>Conditions</th>
+                                <th>Actions</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rule in Model)
+                            {
+                                <tr>
+                                    <td>@rule.Name</td>
+                                    <td>@rule.Priority</td>
+                                    <td>
+                                        @rule.Conditions.Count conditions
+                                    </td>
+                                    <td>
+                                        @rule.Actions.Count actions
+                                    </td>
+                                    <td class="text-end">
+                                        <!-- Edit not implemented for complex rules yet -->
+                                    <form asp-action="Delete" asp-route-id="@rule.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (!Model.Any())
+                    {
+                        <div class="p-3 text-center text-muted">No rules defined.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editRule(id, name, sender, subject, folder) {
+        document.getElementById('ruleId').value = id;
+        document.getElementById('ruleName').value = name;
+        document.getElementById('ruleSender').value = sender || '';
+        document.getElementById('ruleSubject').value = subject || '';
+        document.getElementById('ruleFolder').value = folder;
+
+        document.getElementById('formHeader').innerText = 'Edit Rule';
+        document.getElementById('submitBtn').innerText = 'Update Rule';
+        document.getElementById('cancelBtn').style.display = 'block';
+
+        // Change form action to Edit
+        document.getElementById('ruleForm').action = '/Rules/Edit';
+    }
+
+    function resetForm() {
+        document.getElementById('ruleId').value = '0';
+        document.getElementById('ruleName').value = '';
+        document.getElementById('ruleSender').value = '';
+        document.getElementById('ruleSubject').value = '';
+        document.getElementById('ruleFolder').selectedIndex = 0;
+
+        document.getElementById('formHeader').innerText = 'Create New Rule';
+        document.getElementById('submitBtn').innerText = 'Add Rule';
+        document.getElementById('cancelBtn').style.display = 'none';
+
+        // Change form action back to Create
+        document.getElementById('ruleForm').action = '/Rules/Create';
+    }
+</script>

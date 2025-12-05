@@ -1,0 +1,26 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ExchangeMail.Core -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Core\bin\Debug\net10.0\ExchangeMail.Core.dll
+  ExchangeMail.Web -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\bin\Debug\net10.0\ExchangeMail.Web.dll
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(46,24): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\AdminControllerTests.cs(47,62): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\ContactsControllerTests.cs(41,63): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(81,46): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(231,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(234,21): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\SqliteMailRepositoryTests.cs(237,22): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(244,44): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(246,44): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,55): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(267,47): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(268,43): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(288,47): warning CS8602: Dereference of a possibly null reference. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Controllers\MailControllerTests.cs(289,68): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\ExchangeMail.Tests.csproj]
+  ExchangeMail.Tests -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll
+Test run for C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    64, Skipped:     0, Total:    64, Duration: 749 ms - ExchangeMail.Tests.dll (net10.0)

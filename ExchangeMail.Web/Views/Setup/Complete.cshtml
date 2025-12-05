@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Setup Complete";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm text-center">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0">Setup Complete!</h2>
+                </div>
+                <div class="card-body py-5">
+                    <div class="mb-4 text-success">
+                        <i class="bi bi-check-circle-fill display-1"></i>
+                    </div>
+                    <h3 class="mb-4">Your Caduceus server is ready.</h3>
+                    <p class="lead mb-4">
+                        You have successfully configured the server and created your administrator account.
+                    </p>
+
+                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                        <a asp-controller="Admin" asp-action="Create" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-person-plus-fill me-2"></i>Add Another User
+                        </a>
+                        <a asp-controller="Mail" asp-action="Index" class="btn btn-primary btn-lg">
+                            <i class="bi bi-inbox-fill me-2"></i>Go to Inbox
+                        </a>
+                    </div>
+
+                    <div class="mt-5 text-muted small">
+                        Step 4 of 4 (Completed)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

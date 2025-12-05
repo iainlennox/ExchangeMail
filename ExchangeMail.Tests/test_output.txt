@@ -1,0 +1,84 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ExchangeMail.Web -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Web\bin\Debug\net10.0\ExchangeMail.Web.dll
+  ExchangeMail.Tests -> C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll
+Test run for C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\bin\Debug\net10.0\ExchangeMail.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.0)
+[xUnit.net 00:00:00.06]   Discovering: ExchangeMail.Tests
+[xUnit.net 00:00:00.08]   Discovered:  ExchangeMail.Tests
+[xUnit.net 00:00:00.10]   Starting:    ExchangeMail.Tests
+[xUnit.net 00:00:00.15]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:00.15]       String:    "<img src='data:image/png;base64,iVBORw0KG"···
+[xUnit.net 00:00:00.15]       Not found: "src="data:image/png;base64,"
+[xUnit.net 00:00:00.15]       Stack Trace:
+[xUnit.net 00:00:00.15]         C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\HtmlSanitizerServiceTests.cs(33,0): at ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldAllowDataImages()
+[xUnit.net 00:00:00.15]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.15]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldRemoveExternalCss [15 ms]
+  Passed ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldRemoveScripts [1 ms]
+  Failed ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldAllowDataImages [2 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "<img src='data:image/png;base64,iVBORw0KG"···
+Not found: "src="data:image/png;base64,"
+  Stack Trace:
+     at ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldAllowDataImages() in C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\HtmlSanitizerServiceTests.cs:line 33
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldRemoveIframes [< 1 ms]
+[xUnit.net 00:00:00.18]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:00.18]       String:    "<img src='' data-blocked-src="http://exam"···
+[xUnit.net 00:00:00.18]       Not found: "src="""
+[xUnit.net 00:00:00.18]       Stack Trace:
+[xUnit.net 00:00:00.18]         C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\HtmlSanitizerServiceTests.cs(23,0): at ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldBlockExternalImages()
+[xUnit.net 00:00:00.18]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.18]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[DEBUG] GetUserEmailAsync: Username 'testuser', LocalPart 'testuser', Configured Domain 'example.com'
+[DEBUG] GetUserEmailAsync: Username 'testuser', LocalPart 'testuser', Configured Domain 'example.com'
+  Failed ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldBlockExternalImages [< 1 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "<img src='' data-blocked-src="http://exam"···
+Not found: "src="""
+  Stack Trace:
+     at ExchangeMail.Tests.Services.HtmlSanitizerServiceTests.Sanitize_ShouldBlockExternalImages() in C:\Users\iain\source\repos\AI\ExchangeMail\ExchangeMail.Tests\Services\HtmlSanitizerServiceTests.cs:line 23
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed ExchangeMail.Tests.Controllers.AdminControllerTests.Index_RedirectsToLogin_WhenNotAdmin [76 ms]
+  Passed ExchangeMail.Tests.Controllers.AdminControllerTests.Settings_Post_UpdatesDomain_WhenAdmin [8 ms]
+  Passed ExchangeMail.Tests.Controllers.AdminControllerTests.Create_Post_RedirectsToIndex_WhenSuccess [3 ms]
+  Passed ExchangeMail.Tests.Controllers.AdminControllerTests.Index_ReturnsViewWithUsers_WhenAdmin [17 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Index_ReturnsViewResult_WithMessages [137 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Download_ReturnsFileResult_WhenMessageExists [3 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Delete_RedirectsToIndex_WhenMessageDeleted [1 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Compose_ReturnsViewResult [5 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Details_ReturnsNotFound_WhenMessageDoesNotExist [1 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Send_RedirectsToIndex_WhenMessageSent [< 1 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.MessagePartial_ReturnsPartialView_WhenMessageExists [4 ms]
+  Passed ExchangeMail.Tests.Controllers.MailControllerTests.Details_ReturnsViewResult_WhenMessageExists [1 ms]
+  Passed ExchangeMail.Tests.Services.SqliteConfigurationServiceTests.SetDomainAsync_UpdatesValue [324 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.ValidateUserAsync_ReturnsUser_WhenCredentialsMatch [338 ms]
+  Passed ExchangeMail.Tests.Services.SqliteConfigurationServiceTests.GetDomainAsync_ReturnsLocalhost_WhenNotSet [22 ms]
+  Passed ExchangeMail.Tests.Services.SqliteConfigurationServiceTests.GetDomainAsync_ReturnsValue_WhenSet [< 1 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.GetAllUsersAsync_ReturnsAllUsers [11 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.CreateUserAsync_AddsUserToDatabase [4 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.CreateUserAsync_ThrowsException_WhenUserAlreadyExists [2 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.AnyUsersAsync_ReturnsTrue_WhenUsersExist [2 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.ValidateUserAsync_ReturnsNull_WhenCredentialsDoNotMatch [1 ms]
+  Passed ExchangeMail.Tests.Services.SqliteUserRepositoryTests.AnyUsersAsync_ReturnsFalse_WhenNoUsersExist [< 1 ms]
+  Passed ExchangeMail.Tests.Services.SqliteMailRepositoryTests.GetMessagesAsync_FiltersByUserAndSearch [362 ms]
+  Passed ExchangeMail.Tests.Services.SqliteMailRepositoryTests.SaveMessageAsync_AddsMessageToDatabase [6 ms]
+  Passed ExchangeMail.Tests.Services.SqliteMailRepositoryTests.GetMessageAsync_ReturnsMessage_WhenExists [1 ms]
+  Passed ExchangeMail.Tests.Services.SqliteMailRepositoryTests.MarkAsReadAsync_UpdatesIsReadFlag [1 ms]
+[xUnit.net 00:00:00.49]   Finished:    ExchangeMail.Tests
+  Passed ExchangeMail.Tests.Services.SqliteMailRepositoryTests.DeleteMessageAsync_RemovesMessageFromDatabase [1 ms]
+
+Total tests: 32
+     Passed: 30
+     Failed: 2
+ Total time: 0.9151 Seconds

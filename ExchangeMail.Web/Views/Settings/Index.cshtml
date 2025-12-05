@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<style>
+    #editor-container {
+        height: 200px;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color);
+    }
+
+    [data-bs-theme="dark"] .ql-toolbar {
+        background-color: var(--bs-body-bg);
+        border-color: var(--bs-border-color);
+    }
+
+    [data-bs-theme="dark"] .ql-container {
+        border-color: var(--bs-border-color);
+    }
+
+    [data-bs-theme="dark"] .ql-stroke {
+        stroke: var(--bs-body-color) !important;
+    }
+
+    [data-bs-theme="dark"] .ql-fill {
+        fill: var(--bs-body-color) !important;
+    }
+
+    [data-bs-theme="dark"] .ql-picker {
+        color: var(--bs-body-color) !important;
+    }
+</style>
+
+<div class="container mt-4">
+    <h1>Settings</h1>
+
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert alert-success">@ViewBag.Message</div>
+    }
+
+    <form asp-action="Index" method="post" id="settings-form">
+        <div class="mb-3">
+            <label for="signature" class="form-label">Email Signature</label>
+            <input type="hidden" name="signature" id="signature">
+            <div id="editor-container">@Html.Raw(ViewBag.Signature)</div>
+            <div class="form-text">This signature will be automatically appended to new emails.</div>
+        </div>
+
+        <div class="mb-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="enableAnimations" name="enableAnimations" value="true"
+                @(ViewBag.EnableAnimations == true ? "checked" : "")>
+            <label class="form-check-label" for="enableAnimations">Enable Animations</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+        <a asp-controller="Mail" asp-action="Index" class="btn btn-secondary">Back to Mail</a>
+    </form>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<script>
+    var quill = new Quill('#editor-container', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'color': [] }, { 'background': [] }],
+                ['clean']
+            ]
+        }
+    });
+
+    var form = document.getElementById('settings-form');
+    form.onsubmit = function () {
+        var signature = document.querySelector('input[name=signature]');
+        signature.value = quill.root.innerHTML;
+    };
+</script>

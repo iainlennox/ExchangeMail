@@ -1,0 +1,157 @@
+@using MimeKit
+@model MimeMessage
+
+@if (Model == null)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+        <i class="bi bi-envelope-open fs-1 mb-3"></i>
+        <p>Select an item to read</p>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column h-100 reading-pane-content">
+        @{
+            var dbId = Model.Headers["X-Db-Id"] ?? Model.MessageId;
+        }
+        <!-- OWA Toolbar -->
+    <div class="border-bottom p-2 mb-3 bg-body-tertiary d-flex justify-content-between align-items-center sticky-top">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-sm btn-link text-body me-2 d-md-none" onclick="showList()">
+                    <i class="bi bi-arrow-left fs-5"></i>
+                </button>
+                <div class="btn-group">
+                    <a href="#" onclick="loadReply('@dbId'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold">
+                        <i class="bi bi-reply-fill me-1 text-primary"></i> Reply
+                    </a>
+                    <a href="#" onclick="loadForward('@dbId'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold">
+                        <i class="bi bi-forward-fill me-1 text-primary"></i> Forward
+                    </a>
+                    <button onclick="toggleMessageDarkMode()" id="btn-message-dark-mode"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold" title="Toggle Dark Mode">
+                        <i class="bi bi-moon-stars-fill me-1 text-primary"></i> Dark Mode
+                    </button>
+                    @if (Model.Headers["X-Folder"] == "Junk Email")
+                    {
+                        <a href="#" onclick="markAsNotJunk('@dbId'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold">
+                            <i class="bi bi-check-circle me-1 text-success"></i> Not Junk
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="markAsJunk('@dbId'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold">
+                            <i class="bi bi-x-circle me-1 text-danger"></i> Junk
+                        </a>
+                    }
+                    @if (Model.Headers.Contains("X-Is-Deleted"))
+                    {
+                        <a href="#"
+                    onclick="deleteMessage('@dbId', 'Are you sure you want to permanently delete this message? This cannot be undone.'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body hover-danger">
+                            <i class="bi bi-trash-fill text-danger"></i> Delete Forever
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="deleteMessage('@dbId'); return false;"
+                    class="btn btn-sm btn-outline-secondary border-0 text-body hover-danger">
+                            <i class="bi bi-trash text-danger"></i> Delete
+                        </a>
+                    }
+                </div>
+            </div>
+            <div>
+                <a asp-action="Download" asp-route-id="@dbId"
+                class="btn btn-sm btn-link text-secondary text-decoration-none" title="Download Source">
+                    <i class="bi bi-download"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Security Banner -->
+        @if (ViewBag.IsContentBlocked == true)
+        {
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mx-4 mt-3 mb-0">
+                <div>
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    Some content in this message has been blocked because the sender isn't in your Safe senders list.
+                </div>
+                <div class="d-flex gap-2">
+                    <form asp-action="TrustSender" method="post" class="d-inline">
+                        <input type="hidden" name="email" value="@Model.From.Mailboxes.FirstOrDefault()?.Address" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                        <button type="submit" class="btn btn-sm btn-primary">Trust sender</button>
+                    </form>
+                    <a href="#" onclick="loadMessage('@dbId', true); return false;" class="btn btn-sm btn-secondary">Show
+                        blocked content</a>
+                </div>
+            </div>
+        }
+
+        <!-- Header -->
+    <div class="px-4 pb-3 mb-2 border-bottom pt-3">
+            <h3 class="mb-3 fw-normal">@Model.Subject</h3>
+            <div class="d-flex align-items-center">
+                @{
+                    var sender = Model.From.Mailboxes.FirstOrDefault();
+                    var senderName = sender?.Name;
+                    var senderEmail = sender?.Address;
+                    var avatarLetter = !string.IsNullOrEmpty(senderName) ? senderName[0] : (senderEmail?[0] ?? '?');
+                    var displayName = !string.IsNullOrEmpty(senderName) ? senderName : senderEmail;
+                }
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                style="width: 48px; height: 48px; font-size: 1.5rem; text-transform: uppercase;">
+                    @avatarLetter
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <div class="fw-bold fs-5 text-truncate" style="max-width: 400px;" title="@displayName">
+                            @displayName
+                            @if (!string.IsNullOrEmpty(senderEmail))
+                            {
+                                <a asp-controller="Contacts" asp-action="Create" asp-route-name="@senderName"
+                            asp-route-email="@senderEmail" class="btn btn-sm btn-link text-secondary p-0 ms-2"
+                            title="Add to Contacts">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+                            }
+                        </div>
+                        <div class="text-muted small">@Model.Date.ToString("ddd M/d/yyyy h:mm tt")</div>
+                    </div>
+                    <div class="text-muted small mt-0">
+                        To: @Model.To
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+    <div class="flex-grow-1 email-body-container bg-white">
+            <iframe src="@Url.Action("Body", "Mail", new { id = dbId, showBlocked = ViewBag.ShowBlocked })"
+            style="width: 100%; height: 100%; border: none;" onload="applyMessageDarkMode(this)"></iframe>
+        </div>
+
+        <!-- Attachments -->
+        @if (Model.Attachments.Any())
+        {
+            <div class="border-top pt-3 mt-3 px-4">
+                <h6 class="small text-muted text-uppercase fw-bold"><i class="bi bi-paperclip"></i> Attachments
+                    (@Model.Attachments.Count())</h6>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    @foreach (var attachment in Model.Attachments)
+                    {
+                        var fileName = attachment.ContentDisposition?.FileName ?? attachment.ContentType.Name ?? "unnamed";
+                        <a asp-action="DownloadAttachment" asp-route-id="@dbId" asp-route-fileName="@fileName"
+                class="btn btn-sm btn-light border d-flex align-items-center">
+                            <i class="bi bi-file-earmark me-1"></i> @fileName
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

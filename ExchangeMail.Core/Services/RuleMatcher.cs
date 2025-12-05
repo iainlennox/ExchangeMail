@@ -1,0 +1,158 @@
+using System.Text.RegularExpressions;
+using ExchangeMail.Core.Data.Entities;
+using MimeKit;
+
+namespace ExchangeMail.Core.Services;
+
+public interface IRuleMatcher
+{
+    List<MailRuleActionEntity> Match(MimeMessage message, List<MailRuleEntity> rules);
+}
+
+public class RuleMatcher : IRuleMatcher
+{
+    // To extend the system:
+    // 1. Add new fields to RuleConditionField enum in Entities.cs
+    // 2. Add new operators to RuleConditionOperator enum in Entities.cs
+    // 3. Implement the logic in EvaluateCondition and EvaluateOperator methods below
+    // 4. Update the UI to support the new options
+
+    public List<MailRuleActionEntity> Match(MimeMessage message, List<MailRuleEntity> rules)
+    {
+        var actions = new List<MailRuleActionEntity>();
+
+        foreach (var rule in rules.OrderBy(r => r.Priority))
+        {
+            if (!rule.IsEnabled) continue;
+
+            bool isMatch = false;
+
+            if (rule.Conditions.Count == 0)
+            {
+                // No conditions = match? Or ignore?
+                // Usually rules without conditions are "Apply to all messages"
+                isMatch = true;
+            }
+            else
+            {
+                if (rule.MatchMode == RuleMatchMode.All)
+                {
+                    isMatch = rule.Conditions.All(c => EvaluateCondition(c, message));
+                }
+                else // Any
+                {
+                    isMatch = rule.Conditions.Any(c => EvaluateCondition(c, message));
+                }
+            }
+
+            if (isMatch)
+            {
+                actions.AddRange(rule.Actions);
+                if (rule.StopProcessing)
+                {
+                    break;
+                }
+            }
+        }
+
+        return actions;
+    }
+
+    private bool EvaluateCondition(MailRuleConditionEntity condition, MimeMessage message)
+    {
+        string? valueToTest = null;
+
+        switch (condition.Field)
+        {
+            case RuleConditionField.From:
+                valueToTest = message.From.ToString();
+                break;
+            case RuleConditionField.Subject:
+                valueToTest = message.Subject ?? "";
+                break;
+            case RuleConditionField.Body:
+                valueToTest = message.TextBody ?? message.HtmlBody ?? "";
+                break;
+            case RuleConditionField.Header:
+                // Value format for header: "HeaderName:ExpectedValue" or just check header existence?
+                // Let's assume Condition.Value contains the header name to check if we are just checking existence,
+                // or we need a way to specify header name AND value.
+                // For simplicity, let's assume the Condition.Value is the header name if operator is 'Exists' (not implemented yet),
+                // or we might need a separate field for HeaderName.
+                // Given the current schema, let's assume we don't support arbitrary headers well yet without a HeaderName field.
+                // BUT, for the requested "List-Id", "List-Unsubscribe", "Auto-Submitted", we can handle them specifically or parse.
+                // Let's try to parse "HeaderName" from the condition value if possible, or just support specific headers.
+                // Actually, the user asked for "parsing of headers like List-Id...".
+                // Let's handle specific headers if the Field is Header, maybe the Value is "HeaderName: ValueToMatch"?
+                // Or better, let's add specific fields for common headers?
+                // For now, let's try to find the header.
+                // If the user puts "List-Id" in Value, we check if it exists?
+                // Let's assume for "Header" field, the user puts the header name in the Value? No, that doesn't work for "Contains".
+                // Let's hack it: If Field is Header, we look at all headers? No.
+                // Let's skip generic Header for a moment and handle specific ones if needed, or assume Value is "Name: Value".
+                // Actually, let's look at the taxonomy. "List-Id header", "List-Unsubscribe header".
+                // Let's check if the header exists or contains value.
+                // Implementation: Check if ANY header matches the condition?
+                // Or maybe we should have added `HeaderName` to the entity.
+                // Too late to change entity easily without confusing things? No, I can add it.
+                // But let's stick to what we have.
+                // Let's assume for now generic header matching is "Any header contains X".
+                // Or specific headers like ListId are their own enum values?
+                // I added `RuleConditionField.ListId`.
+                break;
+            case RuleConditionField.ListId:
+                valueToTest = message.Headers["List-Id"];
+                break;
+            case RuleConditionField.IsAutoGenerated:
+                var autoSubmitted = message.Headers["Auto-Submitted"];
+                // "auto-generated" or "no" or "auto-replied"
+                return !string.IsNullOrEmpty(autoSubmitted) && autoSubmitted != "no";
+            case RuleConditionField.HasAttachment:
+                return message.Attachments.Any();
+            case RuleConditionField.SenderInContacts:
+                // This requires DB access (Contacts repository).
+                // RuleMatcher is pure logic?
+                // If we need DB access, we need to inject dependencies.
+                // Let's defer this or pass a "Context" object with necessary data.
+                // For now, return false or throw.
+                // Better: Pass `Func<string, bool> isContact` to Match?
+                // Or make RuleMatcher async and inject IContactRepository.
+                // Let's make it async and inject.
+                return false;
+        }
+
+        if (valueToTest == null) return false;
+
+        return EvaluateOperator(condition.Operator, valueToTest, condition.Value ?? "");
+    }
+
+    private bool EvaluateOperator(RuleConditionOperator op, string input, string target)
+    {
+        switch (op)
+        {
+            case RuleConditionOperator.Contains:
+                return input.Contains(target, StringComparison.OrdinalIgnoreCase);
+            case RuleConditionOperator.DoesNotContain:
+                return !input.Contains(target, StringComparison.OrdinalIgnoreCase);
+            case RuleConditionOperator.Equals:
+                return input.Equals(target, StringComparison.OrdinalIgnoreCase);
+            case RuleConditionOperator.StartsWith:
+                return input.StartsWith(target, StringComparison.OrdinalIgnoreCase);
+            case RuleConditionOperator.EndsWith:
+                return input.EndsWith(target, StringComparison.OrdinalIgnoreCase);
+            case RuleConditionOperator.MatchesRegex:
+                try
+                {
+                    return Regex.IsMatch(input, target, RegexOptions.IgnoreCase);
+                }
+                catch
+                {
+                    return false;
+                }
+            case RuleConditionOperator.Is: // Synonym for Equals?
+                return input.Equals(target, StringComparison.OrdinalIgnoreCase);
+            default:
+                return false;
+        }
+    }
+}

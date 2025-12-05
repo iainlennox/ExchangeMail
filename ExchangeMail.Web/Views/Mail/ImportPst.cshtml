@@ -1,0 +1,35 @@
+@{
+    ViewData["Title"] = "Import PST";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Import PST File</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Upload a PST file to import your emails into your mailbox. Folders will be
+                        created automatically.</p>
+
+                    <form asp-action="ImportPst" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label for="pstFile" class="form-label">Select PST File</label>
+                            <input type="file" class="form-control" id="pstFile" name="pstFile" accept=".pst" required>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-2"></i>Import
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

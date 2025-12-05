@@ -1,0 +1,147 @@
+<div class="d-flex flex-column p-3 h-100 sidebar-content">
+    @{
+        var unreadCounts = ViewBag.FolderUnreadCounts as Dictionary<string, int>;
+    }
+    <a href="#" onclick="loadCompose(); return false;" class="btn btn-primary mb-3 w-100 shadow-sm" title="New Mail">
+        <i class="bi bi-pencil-square me-2"></i> <span class="sidebar-text">New Mail</span>
+    </a>
+
+    <div class="flex-grow-1">
+        <h6 class="text-uppercase text-muted small fw-bold mb-2 px-2">Folders</h6>
+        <div class="list-group list-group-flush">
+            <a asp-controller="Mail" asp-action="Index" asp-route-folder="Inbox"
+                class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == "Inbox" ? "active" : "") droppable-folder"
+                data-folder="Inbox" title="Inbox">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <span><i class="bi bi-inbox me-2"></i> <span class="sidebar-text">Inbox</span></span>
+                    @{
+                        int inboxCount = 0;
+                        if (unreadCounts != null && unreadCounts.ContainsKey("Inbox"))
+                        {
+                            inboxCount = unreadCounts["Inbox"];
+                        }
+                    }
+                    @if (inboxCount > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill sidebar-text">@inboxCount</span>
+                    }
+                </div>
+            </a>
+            <a asp-controller="Mail" asp-action="Index" asp-route-folder="Sent Items"
+                class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == "Sent Items" ? "active" : "")"
+                data-folder="Sent Items" title="Sent Items">
+                <i class="bi bi-send me-2"></i> <span class="sidebar-text">Sent Items</span>
+            </a>
+            <a asp-controller="Mail" asp-action="Index" asp-route-folder="Drafts"
+                class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == "Drafts" ? "active" : "")"
+                data-folder="Drafts" title="Drafts">
+                <i class="bi bi-file-earmark me-2"></i> <span class="sidebar-text">Drafts</span>
+            </a>
+            <a asp-controller="Mail" asp-action="Index" asp-route-folder="Deleted Items"
+                class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == "Deleted Items" ? "active" : "") droppable-folder"
+                data-folder="Deleted Items" title="Deleted Items">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <span><i class="bi bi-trash me-2"></i> <span class="sidebar-text">Deleted Items</span></span>
+                    @{
+                        int deletedCount = 0;
+                        if (unreadCounts != null && unreadCounts.ContainsKey("Deleted Items"))
+                        {
+                            deletedCount = unreadCounts["Deleted Items"];
+                        }
+                    }
+                    @if (deletedCount > 0)
+                    {
+                        <span class="badge bg-danger rounded-pill sidebar-text">@deletedCount</span>
+                    }
+                </div>
+            </a>
+
+            @if (ViewBag.Folders != null)
+            {
+                foreach (var folder in (IEnumerable<string>)ViewBag.Folders)
+                {
+                    <a asp-controller="Mail" asp-action="Index" asp-route-folder="@folder"
+                class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == folder ? "active" : "") droppable-folder"
+                data-folder="@folder" title="@folder">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <span><i class="bi bi-folder me-2"></i> <span class="sidebar-text">@folder</span></span>
+                            <div class="d-flex align-items-center">
+                                @{
+                                    int folderCount = 0;
+                                    if (unreadCounts != null && unreadCounts.ContainsKey(folder))
+                                    {
+                                        folderCount = unreadCounts[folder];
+                                    }
+                                }
+                                @if (folderCount > 0)
+                                {
+                                    <span class="badge bg-danger rounded-pill sidebar-text me-2">@folderCount</span>
+                                }
+                                <span class="text-danger delete-folder-btn @(ViewBag.Folder == folder ? "" : "d-none")"
+                            onclick="deleteFolder('@folder', event)" title="Delete Folder" style="cursor:pointer;">
+                                    <i class="bi bi-trash"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+
+            <button type="button" class="list-group-item list-group-item-action border-0 rounded text-muted"
+                onclick="createNewFolder()" title="Create New Folder">
+                <i class="bi bi-plus-lg me-2"></i> <span class="sidebar-text">Create New Folder</span>
+            </button>
+            <a asp-controller="Contacts" asp-action="Index"
+                class="list-group-item list-group-item-action border-0 rounded text-muted" title="Contacts">
+                <i class="bi bi-person-lines-fill me-2"></i> <span class="sidebar-text">Contacts</span>
+            </a>
+
+        </div>
+
+        @if (ViewBag.Folder == "Deleted Items")
+        {
+            <div class="mt-3 px-2">
+                <a asp-action="EmptyTrash" class="btn btn-outline-danger w-100 btn-sm" onclick="emptyTrash(event)"
+                title="Empty Trash">
+                    <i class="bi bi-trash-fill me-2"></i> <span class="sidebar-text">Empty Trash</span>
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="mt-auto px-2 pb-2 text-center">
+        <button id="sidebarCollapseToggle" class="btn btn-sm btn-link text-muted mb-2" title="Toggle Sidebar">
+            <i id="sidebar-collapse-icon" class="bi bi-chevron-left"></i>
+        </button>
+        <button class="btn btn-sm btn-link text-muted mb-2" onclick="openSettingsModal()" title="Settings">
+            <i class="bi bi-gear-fill"></i>
+        </button>
+        <div class="sidebar-text">
+            <small class="text-muted" style="font-size: 0.7rem;">Powered by Lennox Technologies</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function deleteFolder(folderName, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (await showModalConfirm(`Are you sure you want to delete the folder "${folderName}"? Messages will be moved to Deleted Items.`)) {
+            $.post('/Mail/DeleteFolder', { name: folderName })
+                .done(function () {
+                    window.location.href = '/Mail/Index?folder=Inbox';
+                })
+                .fail(function () {
+                    showModalAlert('Failed to delete folder.');
+                });
+        }
+    }
+
+    async function emptyTrash(event) {
+        event.preventDefault();
+        const url = event.currentTarget.getAttribute('href');
+        if (await showModalConfirm('Are you sure you want to permanently delete all items in the Trash? This cannot be undone.')) {
+            window.location.href = url;
+        }
+    }
+</script>

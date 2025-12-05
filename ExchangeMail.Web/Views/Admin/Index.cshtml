@@ -1,0 +1,137 @@
+@model IEnumerable<ExchangeMail.Web.Models.User>
+
+@{
+    ViewData["Title"] = "Admin - Users";
+}
+
+<div class="container-lg py-4">
+    @if (ViewBag.ConnectionString != null)
+    {
+            <div class="alert alert-info">
+                <strong>Diagnostic Info:</strong> Connection String = @ViewBag.ConnectionString
+            </div>
+    }
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-people-fill me-2"></i>User Management</h5>
+            <div>
+                <a asp-action="Create" class="btn btn-primary btn-sm me-2">
+                    <i class="bi bi-plus-lg me-1"></i>Create New User
+                </a>
+                <a asp-action="Settings" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="bi bi-gear-fill me-1"></i>Settings
+                </a>
+                <a asp-controller="Mail" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Inbox
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">Username</th>
+                            <th class="py-3">Role</th>
+                            <th class="text-end pe-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                                <tr>
+                                    <td class="ps-4 fw-medium">@user.Username</td>
+                                    <td>
+                                    @if (user.IsAdmin)
+                                    {
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Admin</span>
+                                    }
+                                    else
+                                    {
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">User</span>
+                                    }
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <form asp-action="DeleteUser" asp-route-username="@user.Username" method="post" style="display:inline;">
+                                            <button type="button" class="btn btn-sm btn-link text-danger" title="Delete User" onclick="confirmDeleteUser(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-body-tertiary text-muted small py-2">
+            Total Users: @Model.Count()
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center p-4">
+                    @if (ViewBag.ServerStatus == "Online")
+                    {
+                            <div class="display-4 text-success mb-3"><i class="bi bi-hdd-network"></i></div>
+                            <h5 class="card-title fw-bold text-success">Online</h5>
+                            <p class="card-text text-muted small">Server is running.</p>
+                    }
+                    else
+                    {
+                            <div class="display-4 text-danger mb-3"><i class="bi bi-hdd-network"></i></div>
+                            <h5 class="card-title fw-bold text-danger">Offline</h5>
+                            <p class="card-text text-muted small">Server is stopped.</p>
+                    }
+                    @if (ViewBag.LastHeartbeat != null)
+                    {
+                            <div class="text-muted small mt-2">Last seen: @ViewBag.LastHeartbeat.ToLocalTime().ToString("HH:mm:ss")</div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center p-4">
+                    <div class="display-4 text-primary mb-3"><i class="bi bi-gear"></i></div>
+                    <h5 class="card-title fw-bold">Settings</h5>
+                    <p class="card-text text-muted">Configure server settings.</p>
+                    <a asp-action="Settings" class="btn btn-outline-primary stretched-link">Manage Settings</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center p-4">
+                    <div class="display-4 text-info mb-3"><i class="bi bi-envelope-paper"></i></div>
+                    <h5 class="card-title fw-bold">Message Queue</h5>
+                    <p class="card-text text-muted">View all messages in the system.</p>
+                    <a asp-action="Messages" class="btn btn-outline-info stretched-link">View Queue</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3 text-warning">
+                        <i class="bi bi-journal-text display-4"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">System Logs</h5>
+                    <p class="card-text text-muted">View system events, errors, and SMTP logs.</p>
+                    <a asp-action="Logs" class="btn btn-outline-warning stretched-link">View Logs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function confirmDeleteUser(btn) {
+        var form = btn.closest('form');
+        if (await showModalConfirm('Are you sure you want to delete this user?')) {
+            form.submit();
+        }
+    }
+</script>
