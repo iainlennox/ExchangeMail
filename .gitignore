@@ -110,3 +110,5 @@ test_output.txt
 run_log.txt
 users.json
 ExchangeMail.Web/users.json
+Publish/
+
