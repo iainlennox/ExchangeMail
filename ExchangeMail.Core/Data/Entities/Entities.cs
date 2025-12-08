@@ -24,6 +24,9 @@ public class MessageEntity
     public DateTime Date { get; set; }
     public bool IsImported { get; set; }
     public required byte[] RawContent { get; set; }
+    public string? MessageIdHeader { get; set; }
+    public string? InReplyTo { get; set; }
+    public string? ThreadId { get; set; }
 }
 
 public enum RuleMatchMode

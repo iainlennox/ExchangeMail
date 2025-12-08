@@ -2,6 +2,7 @@ using ExchangeMail.Core.Data;
 using ExchangeMail.Core.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
+using System.Linq;
 
 namespace ExchangeMail.Core.Services;
 
@@ -60,8 +61,46 @@ public class SqliteMailRepository : IMailRepository
             Subject = message.Subject ?? "(No Subject)",
             Date = message.Date.DateTime,
             RawContent = rawContent,
-            IsImported = false
+            IsImported = false,
+            MessageIdHeader = message.MessageId,
+            InReplyTo = message.InReplyTo,
+            ThreadId = null // Will be resolved below
         };
+
+        // Resolve ThreadId
+        string? threadId = null;
+
+        // 1. Try In-Reply-To
+        if (!string.IsNullOrEmpty(message.InReplyTo))
+        {
+            var parent = await _context.Messages.FirstOrDefaultAsync(m => m.MessageIdHeader == message.InReplyTo);
+            if (parent != null)
+            {
+                threadId = parent.ThreadId;
+            }
+        }
+
+        // 2. Try References
+        if (threadId == null && message.References != null && message.References.Any())
+        {
+            foreach (var refId in message.References)
+            {
+                var refMsg = await _context.Messages.FirstOrDefaultAsync(m => m.MessageIdHeader == refId);
+                if (refMsg != null)
+                {
+                    threadId = refMsg.ThreadId;
+                    break;
+                }
+            }
+        }
+
+        // 3. Fallback: New Thread (use own ID if it's the start, or just a new GUID)
+        if (threadId == null)
+        {
+            threadId = Guid.NewGuid().ToString();
+        }
+
+        messageEntity.ThreadId = threadId;
 
         _context.Messages.Add(messageEntity);
 
@@ -160,7 +199,7 @@ public class SqliteMailRepository : IMailRepository
         }
         else if (folder.Equals("Inbox", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(x => !x.um.IsDeleted && x.um.Folder == null);
+            query = query.Where(x => !x.um.IsDeleted && (x.um.Folder == null || x.um.Folder == "Inbox"));
             if (isFocused.HasValue)
             {
                 query = query.Where(x => x.um.IsFocused == isFocused.Value);
@@ -171,36 +210,63 @@ public class SqliteMailRepository : IMailRepository
             query = query.Where(x => !x.um.IsDeleted && x.um.Folder == folder);
         }
 
-        var totalCount = await query.CountAsync();
+        // Calculate Total Threads Count
+        // Standard CountAsync on GroupBy can be tricky in some EF Core versions depending on provider.
+        // But let's try direct approach.
+        var groupedQuery = query.GroupBy(x => x.m.ThreadId);
+        var totalCount = await groupedQuery.CountAsync();
 
-        var entities = await query
-            .OrderByDescending(x => x.m.Date)
+        // Get Paged Groups
+        var threadInfos = await groupedQuery
+            .Select(g => new
+            {
+                ThreadId = g.Key,
+                LatestDate = g.Max(x => x.m.Date),
+                LatestMessageId = g.OrderByDescending(x => x.m.Date).Select(x => x.m.Id).FirstOrDefault(),
+                Count = g.Count(),
+                IsRead = g.All(x => x.um.IsRead)
+            })
+            .OrderByDescending(x => x.LatestDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new { x.m, x.um })
             .ToListAsync();
 
+        // Fetch Details for the latest messages
+        var latestIds = threadInfos.Select(x => x.LatestMessageId).ToList();
+        var detailsMap = await (from um in _context.UserMessages
+                                join m in _context.Messages on um.MessageId equals m.Id
+                                where latestIds.Contains(m.Id) && um.UserId == userEmail
+                                select new { m, um }) // Adding um.UserId check to be safe though ID checks imply it
+                                .ToDictionaryAsync(x => x.m.Id, x => x);
+
         var messages = new List<MimeMessage>();
-        foreach (var item in entities)
+        foreach (var info in threadInfos)
         {
-            using var stream = new MemoryStream(item.m.RawContent);
-            var message = await MimeMessage.LoadAsync(stream);
-
-            message.Headers.Add("X-Db-Id", item.m.Id);
-
-            if (item.um.IsRead)
+            if (info.LatestMessageId != null && detailsMap.TryGetValue(info.LatestMessageId, out var detail))
             {
-                message.Headers.Add("X-Is-Read", "true");
+                using var stream = new MemoryStream(detail.m.RawContent);
+                var message = await MimeMessage.LoadAsync(stream);
+
+                message.Headers.Add("X-Db-Id", detail.m.Id);
+                message.Headers.Add("X-Thread-Id", info.ThreadId ?? "");
+                message.Headers.Add("X-Thread-Count", info.Count.ToString());
+
+                // Thread Read Status overrides individual message read status for the list view
+                if (info.IsRead)
+                {
+                    message.Headers.Add("X-Is-Read", "true");
+                }
+                // Else treat as unread (default) if any validation fails
+
+                if (!string.IsNullOrEmpty(detail.um.Labels))
+                {
+                    message.Headers.Add("X-Labels", detail.um.Labels);
+                }
+
+                message.Headers.Add("X-Is-Focused", detail.um.IsFocused.ToString());
+
+                messages.Add(message);
             }
-
-            if (!string.IsNullOrEmpty(item.um.Labels))
-            {
-                message.Headers.Add("X-Labels", item.um.Labels);
-            }
-
-            message.Headers.Add("X-Is-Focused", item.um.IsFocused.ToString());
-
-            messages.Add(message);
         }
 
         return (messages, totalCount);
@@ -236,7 +302,7 @@ public class SqliteMailRepository : IMailRepository
         }
         else if (folder.Equals("Inbox", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(um => !um.IsDeleted && um.Folder == null);
+            query = query.Where(um => !um.IsDeleted && (um.Folder == null || um.Folder == "Inbox"));
         }
         else
         {
@@ -483,7 +549,7 @@ public class SqliteMailRepository : IMailRepository
         }
         else if (folder.Equals("Inbox", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(x => !x.um.IsDeleted && x.um.Folder == null);
+            query = query.Where(x => !x.um.IsDeleted && (x.um.Folder == null || x.um.Folder == "Inbox"));
         }
         else
         {
@@ -529,7 +595,7 @@ public class SqliteMailRepository : IMailRepository
             .ToListAsync();
 
         // Inbox (Folder is null and not deleted)
-        unreadCounts["Inbox"] = unreadMessages.Count(um => um.Folder == null && !um.IsDeleted);
+        unreadCounts["Inbox"] = unreadMessages.Count(um => (um.Folder == null || um.Folder == "Inbox") && !um.IsDeleted);
 
         // Deleted Items (IsDeleted is true)
         unreadCounts["Deleted Items"] = unreadMessages.Count(um => um.IsDeleted);
@@ -548,5 +614,63 @@ public class SqliteMailRepository : IMailRepository
         }
 
         return unreadCounts;
+    }
+    public async Task<IEnumerable<MimeMessage>> GetThreadMessagesAsync(string threadId, string userEmail)
+    {
+        var messages = new List<MimeMessage>();
+
+        var entities = await (from um in _context.UserMessages
+                              join m in _context.Messages on um.MessageId equals m.Id
+                              where um.UserId == userEmail && m.ThreadId == threadId && !um.IsDeleted
+                              orderby m.Date
+                              select new { m, um }).ToListAsync();
+
+        foreach (var item in entities)
+        {
+            using var stream = new MemoryStream(item.m.RawContent);
+            var message = await MimeMessage.LoadAsync(stream);
+
+            message.Headers.Add("X-Db-Id", item.m.Id);
+            if (item.um.IsRead) message.Headers.Add("X-Is-Read", "true");
+            if (!string.IsNullOrEmpty(item.um.Labels)) message.Headers.Add("X-Labels", item.um.Labels);
+
+            messages.Add(message);
+        }
+
+        return messages;
+    }
+
+    public async Task RepairThreadsAsync()
+    {
+        var allMessages = await _context.Messages.OrderBy(m => m.Date).ToListAsync();
+        var threadMap = new Dictionary<string, string>(); // MessageIdHeader -> ThreadId
+
+        foreach (var msg in allMessages)
+        {
+            string? threadId = null;
+
+            // Try InReplyTo
+            if (!string.IsNullOrEmpty(msg.InReplyTo) && threadMap.ContainsKey(msg.InReplyTo))
+            {
+                threadId = threadMap[msg.InReplyTo];
+            }
+
+            // If not found, ignore references for now in batch repair to keep it simple/fast? 
+            // Or ideally implementing full logic. Let's try to look up in DB if not in map (though we are iterating all).
+            // Since we iterate by Date, parents should be processed first.
+
+            if (threadId == null)
+            {
+                threadId = Guid.NewGuid().ToString();
+            }
+
+            msg.ThreadId = threadId;
+            if (!string.IsNullOrEmpty(msg.MessageIdHeader))
+            {
+                threadMap[msg.MessageIdHeader] = threadId;
+            }
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

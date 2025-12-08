@@ -126,8 +126,12 @@ body {
 }
 
 .mail-list-item.active {
-  background-color: var(--bs-primary-bg-subtle);
+  background-color: rgba(13, 110, 253, 0.15) !important;
   border-left: 4px solid var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .mail-list-item.active {
+  background-color: rgba(13, 110, 253, 0.3) !important;
 }
 
 .mail-list-item.unread {

@@ -256,6 +256,16 @@ public class MailController : Controller
         return PartialView("_MessageList", messages);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetThreadMessages(string threadId)
+    {
+        if (GetCurrentUser() == null) return Unauthorized();
+        var userEmail = await GetUserEmailAsync();
+
+        var messages = await _mailRepository.GetThreadMessagesAsync(threadId, userEmail);
+        return PartialView("_ThreadMessageList", messages);
+    }
+
     public async Task<IActionResult> Details(string id, bool showBlocked = false)
     {
         if (GetCurrentUser() == null) return RedirectToAction("Login");

@@ -11,6 +11,22 @@
                 <strong>Diagnostic Info:</strong> Connection String = @ViewBag.ConnectionString
             </div>
     }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
     <div class="card shadow-sm border-0">
         <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-3">
             <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-people-fill me-2"></i>User Management</h5>

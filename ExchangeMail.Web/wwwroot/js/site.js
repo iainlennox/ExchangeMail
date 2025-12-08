@@ -167,11 +167,7 @@ window.openSettingsModal = function () {
     modal.show();
 };
 
-window.showOutlookModal = function () {
-    var modalEl = document.getElementById('outlookModal');
-    var modal = new bootstrap.Modal(modalEl);
-    modal.show();
-
+window.loadOutlookBriefing = function () {
     // Reset Skeletons
     const summarySkeleton = `
         <div class="skeleton-text mb-2" style="width: 100%;"></div>
@@ -219,6 +215,10 @@ window.showOutlookModal = function () {
             <div class="skeleton-text" style="width: 80%;"></div>
         </div>
      `;
+
+    // Disable refresh button while loading
+    var refreshBtn = document.getElementById('btn-outlook-refresh');
+    if (refreshBtn) refreshBtn.disabled = true;
 
     document.getElementById('outlook-summary-content').innerHTML = summarySkeleton;
     document.getElementById('outlook-events-list').innerHTML = eventSkeleton;
@@ -288,5 +288,73 @@ window.showOutlookModal = function () {
         .catch(err => {
             console.error(err);
             document.getElementById('outlook-summary-content').innerHTML = '<p class="text-danger">Failed to load briefing.</p>';
+        })
+        .finally(() => {
+            if (refreshBtn) refreshBtn.disabled = false;
         });
 };
+
+window.showOutlookModal = function () {
+    var modalEl = document.getElementById('outlookModal');
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    // Attach refresh handler if not already
+    var refreshBtn = document.getElementById('btn-outlook-refresh');
+    if (refreshBtn) {
+        // Use .onclick to replace any existing handler to avoid duplicates
+        refreshBtn.onclick = function () {
+            window.loadOutlookBriefing();
+        };
+    }
+
+    // Load initial data
+    window.loadOutlookBriefing();
+};
+
+// Threading Logic
+// Threading Logic
+$(document).on('click', '.thread-expander', function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const threadId = $(this).data('thread-id');
+    const container = document.getElementById(`thread-${threadId}`);
+    const icon = document.getElementById(`icon-${threadId}`);
+
+    console.log('Toggling thread:', threadId, container);
+
+    if (!container) return;
+
+    const isExpanded = container.classList.contains('show');
+
+    if (isExpanded) {
+        // Collapse
+        container.classList.remove('show');
+        icon.classList.remove('bi-chevron-down');
+        icon.classList.add('bi-chevron-right');
+    } else {
+        // Expand
+        // Check if loaded
+        if (container.innerHTML.trim() === '') {
+            container.innerHTML = '<div class="text-center p-2"><div class="spinner-border spinner-border-sm text-secondary" role="status"></div></div>';
+
+            fetch(`/Mail/GetThreadMessages?threadId=${threadId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Error loading thread:', err);
+                    container.innerHTML = '<div class="text-danger small p-2">Error loading messages</div>';
+                });
+        }
+
+        container.classList.add('show');
+        icon.classList.remove('bi-chevron-right');
+        icon.classList.add('bi-chevron-down');
+    }
+});
