@@ -70,6 +70,30 @@
     </div>
     <div class="mb-3">
         <label for="body" class="form-label">Message</label>
+
+        <!-- AI Generator Toggle -->
+        <div class="d-flex align-items-center mb-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="toggle-ai-generator">
+                <i class="bi bi-stars me-1"></i> Write with AI
+            </button>
+        </div>
+
+        <!-- AI Prompt Input (Hidden by default) -->
+        <div id="ai-generator-container" class="card bg-body-tertiary mb-2 p-3" style="display:none;">
+            <label for="ai-prompt" class="form-label fw-bold text-primary small">AI Prompt</label>
+            <div class="input-group">
+                <input type="text" class="form-control" id="ai-prompt"
+                    placeholder="e.g. Write a polite decline to the invitation...">
+                <button class="btn btn-primary" type="button" id="generate-draft-btn">
+                    <i class="bi bi-lightning-fill me-1"></i> Generate
+                </button>
+            </div>
+            <div id="ai-loading" class="small text-muted mt-2" style="display:none;">
+                <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Generating
+                draft...
+            </div>
+        </div>
+
         <input type="hidden" name="body" id="body">
         <div id="editor-container">@Html.Raw(ViewBag.Body)</div>
     </div>
@@ -223,5 +247,62 @@
                 suggestionsContainer.style.display = 'none';
             }
         });
+
+        // AI Generator Logic
+        var aiToggleBtn = document.getElementById('toggle-ai-generator');
+        var aiContainer = document.getElementById('ai-generator-container');
+        var aiPromptInput = document.getElementById('ai-prompt');
+        var generateBtn = document.getElementById('generate-draft-btn');
+        var aiLoading = document.getElementById('ai-loading');
+
+        if (aiToggleBtn) {
+            aiToggleBtn.addEventListener('click', function () {
+                if (aiContainer.style.display === 'none') {
+                    aiContainer.style.display = 'block';
+                    aiPromptInput.focus();
+                } else {
+                    aiContainer.style.display = 'none';
+                }
+            });
+        }
+
+        if (generateBtn) {
+            generateBtn.addEventListener('click', function () {
+                var prompt = aiPromptInput.value;
+                if (!prompt) return;
+
+                generateBtn.disabled = true;
+                aiLoading.style.display = 'block';
+
+                fetch('/Mail/GenerateDraft', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Append or replace? Let's replace for now or append to cursor?
+                            // Simple: Set content.
+                            // Better: If empty, set. If not, confirm?
+                            // For now: Set content.
+                            quill.root.innerHTML = data.draft.replace(/\n/g, '<br>');
+                            aiContainer.style.display = 'none'; // Auto hide on success?
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred generating the draft.');
+                    })
+                    .finally(() => {
+                        generateBtn.disabled = false;
+                        aiLoading.style.display = 'none';
+                    });
+            });
+        }
     })();
 </script>

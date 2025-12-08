@@ -2,125 +2,192 @@
     ViewData["Title"] = "Settings";
 }
 
-<div class="container-lg py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-body-tertiary py-3">
-                    <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-gear-fill me-2"></i>Server Settings</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="Settings" method="post">
-                        <div class="mb-4">
+<div class="container-fluid py-4">
+    <form asp-action="Settings" method="post" id="settingsForm">
+        <!-- Header Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1 fw-bold"><i class="bi bi-gear-fill me-2 text-primary"></i>Settings</h4>
+                <p class="text-muted mb-0">Manage global server configuration and preferences.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Server Configuration -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-body-tertiary fw-bold text-primary">
+                        <i class="bi bi-hdd-stack me-2"></i>Server Configuration
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
                             <label for="domain" class="form-label fw-medium">Email Domain</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-body-tertiary"><i class="bi bi-globe"></i></span>
                                 <input type="text" class="form-control" id="domain" name="domain"
                                     value="@ViewBag.Domain" placeholder="e.g. example.com" required>
                             </div>
-                            <div class="form-text text-muted small">This domain will be appended to all new user
-                                accounts (e.g., user@domain.com).</div>
+                            <div class="form-text text-muted small">Appended to new user accounts.</div>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="port" class="form-label fw-medium">Internal SMTP Port</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-body-tertiary"><i class="bi bi-hdd-network"></i></span>
                                 <input type="number" class="form-control" id="port" name="port"
                                     value="@ViewBag.Port" placeholder="e.g. 2525" required>
                             </div>
-                            <div class="form-text text-muted small">The port the internal SMTP server will listen on. Default is 2525. Restart required.</div>
+                            <div class="form-text text-muted small">Listening port for internal SMTP. Restart required.</div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <hr class="my-4">
-                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Upstream SMTP (Relay)</h6>
-
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <label for="smtpHost" class="form-label fw-medium">SMTP Host</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-server"></i></span>
-                                    <input type="text" class="form-control" id="smtpHost" name="smtpHost"
-                                        value="@ViewBag.SmtpHost" placeholder="e.g. smtp.sendgrid.net">
-                                </div>
+            <!-- Upstream SMTP -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-body-tertiary fw-bold text-primary">
+                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>Upstream SMTP (Relay)
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 mb-3">
+                            <div class="col-8">
+                                <label for="smtpHost" class="form-label fw-medium">Host</label>
+                                <input type="text" class="form-control" id="smtpHost" name="smtpHost"
+                                    value="@ViewBag.SmtpHost" placeholder="smtp.provider.com">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-4">
                                 <label for="smtpPort" class="form-label fw-medium">Port</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-hdd-network"></i></span>
-                                    <input type="number" class="form-control" id="smtpPort" name="smtpPort"
-                                        value="@ViewBag.SmtpPort" placeholder="587">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
-                            <i class="bi bi-info-circle-fill flex-shrink-0 me-2"></i>
-                            <div class="small">
-                                <strong>SendGrid Users:</strong> Set Username to <code>apikey</code> and Password to your API Key.
-                                <br>Use Port <strong>587</strong> for TLS (recommended) or <strong>465</strong> for SSL.
+                                <input type="number" class="form-control" id="smtpPort" name="smtpPort"
+                                    value="@ViewBag.SmtpPort" placeholder="587">
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="smtpUsername" class="form-label fw-medium">SMTP Username</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-body-tertiary"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="smtpUsername" name="smtpUsername"
-                                    value="@ViewBag.SmtpUsername" placeholder="Username">
-                            </div>
+                            <label for="smtpUsername" class="form-label fw-medium">Username</label>
+                            <input type="text" class="form-control" id="smtpUsername" name="smtpUsername"
+                                value="@ViewBag.SmtpUsername" placeholder="Username">
                         </div>
 
                         <div class="mb-3">
-                            <label for="smtpPassword" class="form-label fw-medium">SMTP Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-body-tertiary"><i class="bi bi-key"></i></span>
-                                <input type="password" class="form-control" id="smtpPassword" name="smtpPassword"
-                                    value="@ViewBag.SmtpPassword" placeholder="Password">
-                            </div>
+                            <label for="smtpPassword" class="form-label fw-medium">Password</label>
+                            <input type="password" class="form-control" id="smtpPassword" name="smtpPassword"
+                                value="@ViewBag.SmtpPassword" placeholder="Password">
                         </div>
 
-                        <div class="mb-4 form-check form-switch">
+                        <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="smtpEnableSsl" name="smtpEnableSsl" value="true" @(ViewBag.SmtpEnableSsl == true ? "checked" : "")>
                             <label class="form-check-label" for="smtpEnableSsl">Enable SSL/TLS</label>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <hr class="my-4">
-                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-diagram-3-fill me-2"></i>Routing</h6>
-
-                        <div class="mb-4 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="internalRoutingEnabled" name="internalRoutingEnabled" value="true" @(ViewBag.InternalRoutingEnabled == true ? "checked" : "")>
-                            <label class="form-check-label" for="internalRoutingEnabled">Enable Smart Internal Routing</label>
-                            <div class="form-text text-muted small">When enabled, emails sent to <strong>@ViewBag.Domain</strong> will be routed internally, bypassing the upstream SMTP server.</div>
+            <!-- AI Summarization -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-body-tertiary fw-bold text-primary">
+                        <i class="bi bi-robot me-2"></i>AI Summarization
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="summarizationEnabled" name="summarizationEnabled" value="true" @(ViewBag.SummarizationEnabled == true ? "checked" : "") onchange="toggleSummarizationSettings()">
+                            <label class="form-check-label fw-medium" for="summarizationEnabled">Enable Feature</label>
                         </div>
 
-                        <hr class="my-4">
-                        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone</h6>
-                        
-                        <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                            <i class="bi bi-exclamation-octagon-fill flex-shrink-0 me-2"></i>
-                            <div class="small">
-                                <strong>Reset Database:</strong> This will delete all messages, folders, contacts, and users. Configuration will be preserved.
+                        <div id="summarizationSettings" style="@(ViewBag.SummarizationEnabled == true ? "" : "display:none;")">
+                            <div class="mb-3">
+                                <label for="summarizationProvider" class="form-label fw-medium">Provider</label>
+                                <select class="form-select" id="summarizationProvider" name="summarizationProvider" onchange="toggleProviderSettings()">
+                                    <!option value="OpenAI" @(ViewBag.SummarizationProvider == "OpenAI" ? "selected" : "")>OpenAI</!option>
+                                    <!option value="Local" @(ViewBag.SummarizationProvider == "Local" ? "selected" : "")>Local LLM (LM Studio)</!option>
+                                </select>
+                            </div>
+
+                            <div id="openaiSettings" class="mb-3" style="@(ViewBag.SummarizationProvider != "Local" ? "" : "display:none;")">
+                                <label for="openAIApiKey" class="form-label fw-medium">API Key</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-key"></i></span>
+                                    <input type="password" class="form-control" id="openAIApiKey" name="openAIApiKey"
+                                        value="@ViewBag.OpenAIApiKey" placeholder="sk-...">
+                                </div>
+                            </div>
+
+                            <div id="localLlmSettings" style="@(ViewBag.SummarizationProvider == "Local" ? "" : "display:none;")">
+                                <div class="mb-3">
+                                    <label for="localLlmUrl" class="form-label fw-medium">Server URL</label>
+                                    <input type="text" class="form-control" id="localLlmUrl" name="localLlmUrl"
+                                        value="@ViewBag.LocalLlmUrl" placeholder="http://localhost:1234/v1/chat/completions">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="localLlmModelName" class="form-label fw-medium">Model Name</label>
+                                    <input type="text" class="form-control" id="localLlmModelName" name="localLlmModelName"
+                                        value="@ViewBag.LocalLlmModelName" placeholder="local-model">
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="d-grid gap-2 mb-4">
-                            <a asp-action="ResetDatabase" class="btn btn-outline-danger">
-                                <i class="bi bi-trash3 me-2"></i>Reset Database...
-                            </a>
+            <!-- Routing -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-body-tertiary fw-bold text-primary">
+                        <i class="bi bi-diagram-3-fill me-2"></i>Routing
+                    </div>
+                    <div class="card-body">
+                         <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="internalRoutingEnabled" name="internalRoutingEnabled" value="true" @(ViewBag.InternalRoutingEnabled == true ? "checked" : "")>
+                            <label class="form-check-label fw-medium" for="internalRoutingEnabled">Smart Internal Routing</label>
                         </div>
+                        <p class="text-muted small mb-0">
+                            Route emails for <strong>@ViewBag.Domain</strong> internally, bypassing upstream.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-                        <hr class="my-4">
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-2"></i>Save Changes
-                            </button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                        </div>
-                    </form>
+            <!-- Danger Zone -->
+            <div class="col-md-6 col-xl-4">
+                 <div class="card shadow-sm h-100 border-danger">
+                    <div class="card-header bg-danger-subtle text-danger fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text small mb-3">
+                            Resetting the database will permanently delete all messages, folders, contacts, and users. Configuration is preserved.
+                        </p>
+                        <a asp-action="ResetDatabase" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-trash3 me-2"></i>Reset Database Protocol
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+
+<script>
+    function toggleSummarizationSettings() {
+        var enabled = document.getElementById('summarizationEnabled').checked;
+        document.getElementById('summarizationSettings').style.display = enabled ? 'block' : 'none';
+    }
+
+    function toggleProviderSettings() {
+        var provider = document.getElementById('summarizationProvider').value;
+        if (provider === 'OpenAI') {
+            document.getElementById('openaiSettings').style.display = 'block';
+            document.getElementById('localLlmSettings').style.display = 'none';
+        } else {
+            document.getElementById('openaiSettings').style.display = 'none';
+            document.getElementById('localLlmSettings').style.display = 'block';
+        }
+    }
+</script>

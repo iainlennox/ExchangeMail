@@ -45,7 +45,8 @@ public class MailControllerTests
             null!, // ImportStatusService
             null!, // IServiceScopeFactory
             _mockContactRepo.Object,
-            _mockBlockListRepo.Object
+            _mockBlockListRepo.Object,
+            new Mock<IAiEmailService>().Object
         );
 
         var session = new Mock<ISession>();

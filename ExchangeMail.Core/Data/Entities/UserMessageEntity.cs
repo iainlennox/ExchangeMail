@@ -11,4 +11,6 @@ public class UserMessageEntity
     public string? Folder { get; set; }
     public bool IsRead { get; set; }
     public bool IsDeleted { get; set; }
+    public string? Labels { get; set; }
+    public bool IsFocused { get; set; } = true;
 }

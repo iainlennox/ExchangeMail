@@ -8,11 +8,13 @@ public class SetupController : Controller
 {
     private readonly IConfigurationService _configurationService;
     private readonly IUserRepository _userRepository;
+    private readonly IMailRepository _mailRepository;
 
-    public SetupController(IConfigurationService configurationService, IUserRepository userRepository)
+    public SetupController(IConfigurationService configurationService, IUserRepository userRepository, IMailRepository mailRepository)
     {
         _configurationService = configurationService;
         _userRepository = userRepository;
+        _mailRepository = mailRepository;
     }
 
     [HttpGet]
@@ -97,6 +99,15 @@ public class SetupController : Controller
         try
         {
             await _userRepository.CreateUserAsync(username, password, true);
+
+            // Send Welcome Email
+            var welcomeParams = new List<(string UserEmail, string? Folder, string? Labels)> { (username, null, null) };
+            var welcomeEmail = WelcomeEmailGenerator.Create(username);
+
+            // Set Date to now
+            welcomeEmail.Date = DateTimeOffset.Now;
+
+            await _mailRepository.SaveMessageWithUserStatesAsync(welcomeEmail, welcomeParams);
 
             // Auto-login
             HttpContext.Session.SetString("Username", username);

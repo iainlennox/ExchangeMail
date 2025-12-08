@@ -34,31 +34,56 @@ public class RulesController : Controller
         return View(rules);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(MailRuleEntity rule)
+    [HttpGet]
+    public async Task<IActionResult> Editor(int? id)
     {
         var userEmail = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(userEmail)) return RedirectToAction("Login", "Mail");
 
-        rule.UserEmail = userEmail;
-        await _ruleRepository.AddRuleAsync(rule);
+        // Populate folders for dropdowns
+        var folders = await _mailRepository.GetFoldersAsync(userEmail);
+        var allFolders = new List<string> { "Inbox", "Junk Email", "Deleted Items" };
+        allFolders.AddRange(folders);
+        ViewBag.Folders = allFolders;
 
-        return RedirectToAction("Index");
+        if (id.HasValue && id > 0)
+        {
+            var rules = await _ruleRepository.GetRulesAsync(userEmail);
+            var rule = rules.FirstOrDefault(r => r.Id == id.Value);
+            if (rule == null) return NotFound();
+            return View(rule);
+        }
+
+        // New Rule Default
+        return View(new MailRuleEntity
+        {
+            UserEmail = userEmail,
+            Name = "New Rule",
+            Conditions = new List<MailRuleConditionEntity>(),
+            Actions = new List<MailRuleActionEntity>()
+        });
     }
 
     [HttpPost]
-    public async Task<IActionResult> Edit(MailRuleEntity rule)
+    public async Task<IActionResult> Save(MailRuleEntity rule)
     {
         var userEmail = HttpContext.Session.GetString("Username");
         if (string.IsNullOrEmpty(userEmail)) return RedirectToAction("Login", "Mail");
 
-        // Verify ownership (simple check, though repository update would fail if ID mismatch usually, 
-        // but here we want to ensure the rule belongs to the user before updating)
-        // For now, we trust the ID + UserEmail overwrite, but ideally we fetch first.
-        // Let's ensure UserEmail is set to current user to prevent hijacking.
         rule.UserEmail = userEmail;
 
-        await _ruleRepository.UpdateRuleAsync(rule);
+        // Ensure Conditions and Actions are initialized
+        rule.Conditions ??= new List<MailRuleConditionEntity>();
+        rule.Actions ??= new List<MailRuleActionEntity>();
+
+        if (rule.Id == 0)
+        {
+            await _ruleRepository.AddRuleAsync(rule);
+        }
+        else
+        {
+            await _ruleRepository.UpdateRuleAsync(rule);
+        }
 
         return RedirectToAction("Index");
     }

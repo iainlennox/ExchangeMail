@@ -15,13 +15,14 @@ public class MailController : Controller
     private readonly ISafeSenderRepository _safeSenderRepository;
     private readonly IBlockListRepository _blockListRepository;
     private readonly IContactRepository _contactRepository;
+    private readonly IAiEmailService _aiEmailService;
     private readonly HtmlSanitizerService _htmlSanitizerService;
 
     private readonly PstImportService _pstImportService;
     private readonly ImportStatusService _importStatusService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public MailController(IMailRepository mailRepository, IUserRepository userRepository, IConfigurationService configurationService, ILogRepository logRepository, ISafeSenderRepository safeSenderRepository, HtmlSanitizerService htmlSanitizerService, PstImportService pstImportService, ImportStatusService importStatusService, IServiceScopeFactory serviceScopeFactory, IContactRepository contactRepository, IBlockListRepository blockListRepository)
+    public MailController(IMailRepository mailRepository, IUserRepository userRepository, IConfigurationService configurationService, ILogRepository logRepository, ISafeSenderRepository safeSenderRepository, HtmlSanitizerService htmlSanitizerService, PstImportService pstImportService, ImportStatusService importStatusService, IServiceScopeFactory serviceScopeFactory, IContactRepository contactRepository, IBlockListRepository blockListRepository, IAiEmailService aiEmailService)
     {
         _mailRepository = mailRepository;
         _userRepository = userRepository;
@@ -34,6 +35,7 @@ public class MailController : Controller
         _serviceScopeFactory = serviceScopeFactory;
         _contactRepository = contactRepository;
         _blockListRepository = blockListRepository;
+        _aiEmailService = aiEmailService;
     }
 
     private string? GetCurrentUser() => HttpContext.Session.GetString("Username");
@@ -99,7 +101,7 @@ public class MailController : Controller
         return RedirectToAction("Login");
     }
 
-    public async Task<IActionResult> Index(string searchString, int page = 1, string folder = "Inbox")
+    public async Task<IActionResult> Index(string searchString, int page = 1, string folder = "Inbox", bool? focused = null)
     {
         var username = GetCurrentUser();
         if (username == null) return RedirectToAction("Login");
@@ -107,7 +109,10 @@ public class MailController : Controller
         var userEmail = await GetUserEmailAsync();
         int pageSize = 25;
 
-        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder);
+        // Default to Focused if in Inbox and no preference specified
+        if (folder == "Inbox" && focused == null) focused = true;
+
+        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused);
         var folders = await _mailRepository.GetFoldersAsync(userEmail);
         var unreadCounts = await _mailRepository.GetUnreadCountsAsync(userEmail);
 
@@ -117,6 +122,7 @@ public class MailController : Controller
         ViewBag.Page = page;
         ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
         ViewBag.Folder = folder;
+        ViewBag.Focused = focused; // Pass to view for tabs
         ViewBag.Folders = folders;
         ViewBag.FolderUnreadCounts = unreadCounts;
 
@@ -134,11 +140,97 @@ public class MailController : Controller
 
         if (summary == null) return Json(new { id = (string?)null });
 
+        if (summary == null) return Json(new { id = (string?)null });
+
         return Json(new { id = summary.Value.Id, from = summary.Value.From, subject = summary.Value.Subject });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> MarkAsRead(string id)
+    {
+        if (GetCurrentUser() == null) return Unauthorized();
+        var userEmail = await GetUserEmailAsync();
+        await _mailRepository.MarkAsReadAsync(id, userEmail);
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> MarkAsUnread(string id)
+    {
+        if (GetCurrentUser() == null) return Unauthorized();
+        var userEmail = await GetUserEmailAsync();
+        await _mailRepository.MarkAsUnreadAsync(id, userEmail);
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleUrgent(string id)
+    {
+        if (GetCurrentUser() == null) return Unauthorized();
+        var userEmail = await GetUserEmailAsync();
+
+        var message = await _mailRepository.GetMessageAsync(id, userEmail);
+        if (message == null) return NotFound();
+
+        var currentLabels = message.Headers["X-Labels"] ?? "";
+        var labelList = currentLabels.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(l => l.Trim())
+                                     .ToList();
+
+        if (labelList.Contains("Urgent", StringComparer.OrdinalIgnoreCase))
+        {
+            labelList.RemoveAll(l => l.Equals("Urgent", StringComparison.OrdinalIgnoreCase));
+        }
+        else
+        {
+            labelList.Add("Urgent");
+        }
+
+        var newLabels = string.Join(",", labelList);
+        await _mailRepository.UpdateMessageLabelsAsync(id, userEmail, newLabels);
+
+        return Json(new { success = true, isUrgent = labelList.Contains("Urgent", StringComparer.OrdinalIgnoreCase) });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Summarize(string id)
+    {
+        var username = GetCurrentUser();
+        if (username == null) return Unauthorized();
+
+        var userEmail = await GetUserEmailAsync();
+        var message = await _mailRepository.GetMessageAsync(id, userEmail);
+        if (message == null) return NotFound();
+
+        // Prefer TextBody for summarization as it's cleaner, fallback to HtmlBody
+        string content = message.TextBody ?? message.HtmlBody ?? "";
+
+        // Simple Strip HTML if we fell back to HTML (very basic, for now relying on what we have)
+        // Ideally we'd use HtmlAgilityPack to get text. 
+        if (message.TextBody == null && !string.IsNullOrEmpty(message.HtmlBody))
+        {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(message.HtmlBody);
+            content = doc.DocumentNode.InnerText;
+        }
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return Json(new { success = false, message = "Email has no content to summarize." });
+        }
+
+        // Limit content length to avoid token limits (rudimentary)
+        if (content.Length > 10000)
+        {
+            content = content.Substring(0, 10000);
+        }
+
+        var summary = await _aiEmailService.SummarizeAsync(content);
+        return Json(new { success = true, summary });
+    }
+
     [HttpGet]
-    public async Task<IActionResult> MessageList(string searchString, int page = 1, string folder = "Inbox")
+    public async Task<IActionResult> MessageList(string searchString, int page = 1, string folder = "Inbox", bool? focused = null)
     {
         var username = GetCurrentUser();
         if (username == null) return Unauthorized();
@@ -146,7 +238,10 @@ public class MailController : Controller
         var userEmail = await GetUserEmailAsync();
         int pageSize = 25;
 
-        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder);
+        // Default to Focused if in Inbox and no preference specified
+        if (folder == "Inbox" && focused == null) focused = true;
+
+        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused);
         var unreadCounts = await _mailRepository.GetUnreadCountsAsync(userEmail);
 
         ViewBag.UserEmail = userEmail;
@@ -155,6 +250,7 @@ public class MailController : Controller
         ViewBag.Page = page;
         ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
         ViewBag.Folder = folder;
+        ViewBag.Focused = focused;
         ViewBag.FolderUnreadCounts = unreadCounts;
 
         return PartialView("_MessageList", messages);
@@ -172,6 +268,7 @@ public class MailController : Controller
         }
 
         await _mailRepository.MarkAsReadAsync(id, userEmail);
+        await EnsureLabelsAsync(message, id, userEmail);
 
         var senderEmail = message.From.Mailboxes.FirstOrDefault()?.Address;
         var isSafeSender = !string.IsNullOrEmpty(senderEmail) && await _safeSenderRepository.IsSafeSenderAsync(senderEmail);
@@ -205,6 +302,7 @@ public class MailController : Controller
         }
 
         await _mailRepository.MarkAsReadAsync(id, userEmail);
+        await EnsureLabelsAsync(message, id, userEmail);
 
         var senderEmail = message.From.Mailboxes.FirstOrDefault()?.Address;
         var isSafeSender = !string.IsNullOrEmpty(senderEmail) && await _safeSenderRepository.IsSafeSenderAsync(senderEmail);
@@ -223,6 +321,49 @@ public class MailController : Controller
         ViewBag.ShowBlocked = showBlocked;
 
         return PartialView("_ReadingPane", message);
+    }
+
+    private async Task EnsureLabelsAsync(MimeMessage message, string messageId, string userEmail)
+    {
+        // Check if labels are missing
+        if (!message.Headers.Contains("X-Labels"))
+        {
+            // Check if Auto Labeling is enabled for this user
+            var username = GetCurrentUser();
+            if (username != null && await _userRepository.GetAutoLabelingAsync(username))
+            {
+                // Generate Labels
+                string content = message.TextBody ?? message.HtmlBody ?? "";
+                if (string.IsNullOrEmpty(message.TextBody) && !string.IsNullOrEmpty(message.HtmlBody))
+                {
+                    // Basic strip if possible? or just let AI handle it.
+                    // The AI service handles raw text best usually.
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(message.HtmlBody);
+                    content = doc.DocumentNode.InnerText;
+                }
+
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    // Truncate if too long (simple check)
+                    if (content.Length > 10000) content = content.Substring(0, 10000);
+
+                    try
+                    {
+                        var labels = await _aiEmailService.GetLabelsAsync(content);
+                        if (!string.IsNullOrEmpty(labels))
+                        {
+                            await _mailRepository.UpdateMessageLabelsAsync(messageId, userEmail, labels);
+                            message.Headers.Add("X-Labels", labels);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await _logRepository.LogAsync("Error", "MailController", $"Failed to lazy-generate labels for {messageId}", ex);
+                    }
+                }
+            }
+        }
     }
 
     [HttpGet]
@@ -947,5 +1088,35 @@ public class MailController : Controller
         }
 
         return Json(results);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GenerateDraft([FromBody] DraftGenerationRequest request)
+    {
+        try
+        {
+            var username = GetCurrentUser();
+            if (username == null) return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(request?.Prompt))
+            {
+                return Json(new { success = false, message = "Prompt is required." });
+            }
+
+            await _logRepository.LogAsync("Info", "AI", $"Generating draft for user {username} with prompt: {request.Prompt}");
+
+            var draft = await _aiEmailService.GenerateDraftAsync(request.Prompt);
+            return Json(new { success = true, draft });
+        }
+        catch (Exception ex)
+        {
+            await _logRepository.LogAsync("Error", "AI", $"Error generating draft: {ex.Message}", ex);
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
+    }
+
+    public class DraftGenerationRequest
+    {
+        public string? Prompt { get; set; }
     }
 }

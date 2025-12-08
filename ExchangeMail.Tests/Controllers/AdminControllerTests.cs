@@ -5,6 +5,7 @@ using ExchangeMail.Core.Services;
 using ExchangeMail.Core.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -16,9 +17,14 @@ public class AdminControllerTests
     private readonly Mock<IConfigurationService> _mockConfigurationService;
     private readonly Mock<IMailRepository> _mockMailRepository;
     private readonly Mock<ILogRepository> _mockLogRepository;
+    private readonly Mock<ITaskRepository> _mockTaskRepository;
+    private readonly Mock<ICalendarRepository> _mockCalendarRepository;
     private readonly AdminController _controller;
     private readonly Mock<ISession> _mockSession;
     private readonly Mock<HttpContext> _mockHttpContext;
+
+    private readonly Mock<IServiceProvider> _mockServiceProvider;
+    private readonly Mock<IConfiguration> _mockConfig;
 
     public AdminControllerTests()
     {
@@ -26,15 +32,21 @@ public class AdminControllerTests
         _mockConfigurationService = new Mock<IConfigurationService>();
         _mockMailRepository = new Mock<IMailRepository>();
         _mockLogRepository = new Mock<ILogRepository>();
+        _mockTaskRepository = new Mock<ITaskRepository>();
+        _mockCalendarRepository = new Mock<ICalendarRepository>();
         _controller = new AdminController(
             _mockUserRepository.Object,
             _mockConfigurationService.Object,
             _mockMailRepository.Object,
-            _mockLogRepository.Object);
+            _mockLogRepository.Object,
+            _mockTaskRepository.Object,
+            _mockCalendarRepository.Object);
 
         _mockSession = new Mock<ISession>();
         _mockHttpContext = new Mock<HttpContext>();
         _mockHttpContext.Setup(s => s.Session).Returns(_mockSession.Object);
+
+
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = _mockHttpContext.Object
@@ -69,6 +81,9 @@ public class AdminControllerTests
         SetupAdminSession(true);
         var users = new List<UserEntity> { new UserEntity { Username = "test", Password = "password" } };
         _mockUserRepository.Setup(r => r.GetAllUsersAsync()).ReturnsAsync(users);
+        _mockConfigurationService.Setup(x => x.GetServerHeartbeatAsync()).ReturnsAsync(DateTime.UtcNow);
+
+
 
         // Act
         var result = await _controller.Index();
@@ -110,7 +125,7 @@ public class AdminControllerTests
         var enableSsl = true;
 
         // Act
-        var result = await _controller.Settings(domain, smtpPort, smtpServer, imapPort, imapServer, "123", enableSsl, true);
+        var result = await _controller.Settings(domain, smtpPort, smtpServer, imapPort, imapServer, "123", enableSsl, true, false, "OpenAI", "", "", "");
 
         // Assert
         var redirectResult = Assert.IsType<RedirectToActionResult>(result);

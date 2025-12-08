@@ -20,4 +20,16 @@ public interface IConfigurationService
     Task SetServerHeartbeatAsync(DateTime timestamp);
     Task<bool> GetInternalRoutingEnabledAsync();
     Task SetInternalRoutingEnabledAsync(bool enabled);
+
+    // Summarization Settings
+    Task<bool> GetSummarizationEnabledAsync();
+    Task SetSummarizationEnabledAsync(bool enabled);
+    Task<string> GetSummarizationProviderAsync();
+    Task SetSummarizationProviderAsync(string provider);
+    Task<string> GetOpenAIApiKeyAsync();
+    Task SetOpenAIApiKeyAsync(string apiKey);
+    Task<string> GetLocalLlmUrlAsync();
+    Task SetLocalLlmUrlAsync(string url);
+    Task<string> GetLocalLlmModelNameAsync();
+    Task SetLocalLlmModelNameAsync(string modelName);
 }

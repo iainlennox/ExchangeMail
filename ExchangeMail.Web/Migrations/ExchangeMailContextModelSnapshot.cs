@@ -32,6 +32,40 @@ namespace ExchangeMail.Web.Migrations
                     b.ToTable("BlockedSenders");
                 });
 
+            modelBuilder.Entity("ExchangeMail.Core.Data.Entities.CalendarEventEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAllDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CalendarEvents");
+                });
+
             modelBuilder.Entity("ExchangeMail.Core.Data.Entities.ConfigEntity", b =>
                 {
                     b.Property<string>("Key")
@@ -259,6 +293,37 @@ namespace ExchangeMail.Web.Migrations
                     b.ToTable("SafeSenders");
                 });
 
+            modelBuilder.Entity("ExchangeMail.Core.Data.Entities.TaskEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tasks");
+                });
+
             modelBuilder.Entity("ExchangeMail.Core.Data.Entities.UserEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -266,6 +331,9 @@ namespace ExchangeMail.Web.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("EnableAnimations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("EnableAutoLabeling")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsAdmin")
@@ -299,8 +367,14 @@ namespace ExchangeMail.Web.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsFocused")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsRead")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Labels")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("MessageId")
                         .IsRequired()

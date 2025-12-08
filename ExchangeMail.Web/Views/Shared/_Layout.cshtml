@@ -45,6 +45,15 @@
                     <i class="bi bi-envelope-fill text-primary"></i> Caduceus Web App
                 </a>
             </div>
+
+            <!-- Centered Button -->
+            <div class="d-none d-md-block" style="position: absolute; left: 50%; transform: translateX(-50%);">
+                <button onclick="showOutlookModal()" class="btn btn-outline-primary btn-sm rounded-pill shadow-sm px-3"
+                    title="Today's Outlook">
+                    <i class="bi bi-stars me-2"></i> Today's Outlook
+                </button>
+            </div>
+
             <div class="d-flex align-items-center">
                 <div class="me-3" title="@statusTitle - @lastSeen" data-bs-toggle="tooltip" data-bs-placement="bottom">
                     <i class="bi bi-hdd-network-fill @statusColor"></i>
@@ -67,6 +76,7 @@
                         </li>
                         <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">Admin</a></li>
                         <li><a class="dropdown-item" asp-controller="Contacts" asp-action="Index">Contacts</a></li>
+                        <li><a class="dropdown-item" asp-controller="Calendar" asp-action="Index">Calendar</a></li>
                         <li><a class="dropdown-item" asp-controller="Mail" asp-action="ImportPst">Import PST</a></li>
                         <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                 data-bs-target="#aboutModal">About</a></li>
@@ -101,7 +111,10 @@
                     <p class="mb-0"><img src="~/images/scotlandFlag.png" alt="Scotland Flag"
                             style="height: 20px; width: auto;" class="me-1"> Made in Scotland</p>
                     <hr />
-                    <p class="small text-muted mb-0">&copy; @DateTime.Now.Year ExchangeMail. All rights reserved.</p>
+                    <p class="small text-muted mb-0">&copy; 2025 Lennox Technologies. All rights reserved.</p>
+                    <p class="mt-2"><a href="https://github.com/iainlennox/ExchangeMail" target="_blank"
+                            class="link-secondary text-decoration-none"><i class="bi bi-github"></i> View on GitHub</a>
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -127,7 +140,9 @@
     </div>
 
     <partial name="_GlobalModals" />
+    <partial name="_GlobalModals" />
     <partial name="_SettingsModal" />
+    <partial name="_OutlookModal" />
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
