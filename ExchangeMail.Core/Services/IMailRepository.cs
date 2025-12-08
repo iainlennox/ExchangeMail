@@ -24,4 +24,6 @@ public interface IMailRepository
     Task<(string Id, string From, string Subject)?> GetLatestMessageSummaryAsync(string userEmail, string folder = "Inbox");
     Task UpdateMessageAsync(string id, MimeMessage message);
     Task<Dictionary<string, int>> GetUnreadCountsAsync(string userEmail);
+    Task<IEnumerable<MimeMessage>> GetThreadMessagesAsync(string threadId, string userEmail);
+    Task RepairThreadsAsync();
 }

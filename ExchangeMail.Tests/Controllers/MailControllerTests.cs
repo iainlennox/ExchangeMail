@@ -75,7 +75,7 @@ public class MailControllerTests
             new MimeMessage() { Subject = "Test 2" }
         };
 
-        _mockRepo.Setup(r => r.GetMessagesAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>()))
+        _mockRepo.Setup(r => r.GetMessagesAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<bool?>()))
             .ReturnsAsync((messages, 2));
 
         // Act

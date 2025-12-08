@@ -29,22 +29,39 @@
                 var dbId = message.Headers["X-Db-Id"] ?? message.MessageId;
                 var isUrgent = (message.Headers["X-Labels"] ?? "").Contains("Urgent", StringComparison.OrdinalIgnoreCase);
 
-                <div class="mail-list-item @(isRead ? "" : "unread")" data-id="@dbId" draggable="true" ondragstart="drag(event)"
-            onclick="loadMessage('@dbId', this)">
-                    <div class="d-flex justify-content-between align-items-baseline">
-                        <span class="sender text-truncate" style="max-width: 70%;">
-                            @if (isUrgent)
-                            {
-                                <i class="bi bi-exclamation-circle-fill text-danger me-1" title="High Priority"></i>
-                            }
-                            @message.From
-                        </span>
-                        <span class="date">@message.Date.ToString("MMM d")</span>
+                var threadId = message.Headers["X-Thread-Id"];
+                var threadCountVal = message.Headers["X-Thread-Count"];
+                int.TryParse(threadCountVal, out int threadCount);
+                if (threadCount < 2) threadCount = 0; // Treat single as non-thread
+
+                <div class="thread-wrapper">
+                    <div class="mail-list-item @(isRead ? "" : "unread")" data-id="@dbId" draggable="true"
+                ondragstart="drag(event)" onclick="loadMessage('@dbId', this)">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <span class="sender text-truncate" style="max-width: 70%;">
+                                @if (isUrgent)
+                                {
+                                    <i class="bi bi-exclamation-circle-fill text-danger me-1" title="High Priority"></i>
+                                }
+                                @if (threadCount > 1)
+                                {
+                                    <span class="badge bg-secondary rounded-pill me-1" style="font-size: 0.7em;">@threadCount</span>
+                                    <i class="bi bi-chevron-right me-1 text-muted thread-expander"
+                            data-thread-id="@threadId" id="icon-@threadId" style="cursor: pointer;"></i>
+                                }
+                                @message.From
+                            </span>
+                            <span class="date">@message.Date.ToString("MMM d")</span>
+                        </div>
+                        <div class="subject text-truncate">@message.Subject</div>
+                        <div class="preview">
+                            @(message.TextBody?.Substring(0, Math.Min(message.TextBody.Length, 50)) ?? "No preview available")
+                        </div>
                     </div>
-                    <div class="subject text-truncate">@message.Subject</div>
-                    <div class="preview">
-                        @(message.TextBody?.Substring(0, Math.Min(message.TextBody.Length, 50)) ?? "No preview available")
-                    </div>
+                    @if (threadCount > 1)
+                    {
+                        <div id="thread-@threadId" class="thread-messages collapse ps-2 border-start ms-2 my-1"></div>
+                    }
                 </div>
             }
         }

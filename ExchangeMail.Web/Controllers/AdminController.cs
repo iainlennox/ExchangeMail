@@ -141,15 +141,131 @@ public class AdminController : Controller
                 mimeMessage.Date = DateTimeOffset.Now.AddMinutes(-new Random().Next(1, 120));
 
                 string? labels = emailData.Urgent ? "Urgent" : null;
-                var userStates = new List<(string UserEmail, string? Folder, string? Labels)> { (username, "Inbox", labels) };
+                var userStates = new List<(string UserEmail, string? Folder, string? Labels)> { (username, null, labels) };
                 await _mailRepository.SaveMessageWithUserStatesAsync(mimeMessage, userStates);
             }
 
+            // 4. Threaded Conversation (Project Phoenix)
+            var threadId = Guid.NewGuid().ToString();
+            var msg1Id = Guid.NewGuid().ToString() + "@demo.local";
+            var msg2Id = Guid.NewGuid().ToString() + "@demo.local";
+            var msg3Id = Guid.NewGuid().ToString() + "@demo.local";
+
+            // Msg 1
+            var tMsg1 = new MimeMessage();
+            tMsg1.From.Add(new MailboxAddress("Project Lead", "lead@company.com"));
+            tMsg1.To.Add(new MailboxAddress(username, username));
+            tMsg1.Subject = "Project Phoenix Kickoff";
+            tMsg1.Body = new TextPart("plain") { Text = "Hi Team,\n\nWe are starting Project Phoenix properly today. Please reveiw the attached docs." };
+            tMsg1.Date = DateTimeOffset.Now.AddDays(-2);
+            tMsg1.MessageId = msg1Id;
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsg1, new[] { (username, (string?)null, (string?)null) });
+
+            // Msg 2 (Reply)
+            var tMsg2 = new MimeMessage();
+            tMsg2.From.Add(new MailboxAddress("Developer", "dev@company.com"));
+            tMsg2.To.Add(new MailboxAddress("Project Lead", "lead@company.com"));
+            tMsg2.Cc.Add(new MailboxAddress(username, username));
+            tMsg2.Subject = "Re: Project Phoenix Kickoff";
+            tMsg2.Body = new TextPart("plain") { Text = "Docs look good. I will start the repo setup." };
+            tMsg2.Date = DateTimeOffset.Now.AddDays(-1);
+            tMsg2.MessageId = msg2Id;
+            tMsg2.InReplyTo = msg1Id;
+            tMsg2.References.Add(msg1Id);
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsg2, new[] { (username, (string?)null, (string?)null) });
+
+            // Msg 3 (Reply All)
+            var tMsg3 = new MimeMessage();
+            tMsg3.From.Add(new MailboxAddress("Project Lead", "lead@company.com"));
+            tMsg3.To.Add(new MailboxAddress("Developer", "dev@company.com"));
+            tMsg3.Cc.Add(new MailboxAddress(username, username));
+            tMsg3.Subject = "Re: Project Phoenix Kickoff";
+            tMsg3.Body = new TextPart("plain") { Text = "Great. Let's sync tomorrow at 10am." };
+            tMsg3.Date = DateTimeOffset.Now.AddHours(-2);
+            tMsg3.MessageId = msg3Id;
+            tMsg3.InReplyTo = msg2Id;
+            tMsg3.References.Add(msg1Id);
+            tMsg3.References.Add(msg2Id);
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsg3, new[] { (username, (string?)null, (string?)null) });
+
+            // 5. Support Ticket Thread
+            var ticketThreadId = Guid.NewGuid().ToString();
+            var ticketMsg1Id = Guid.NewGuid().ToString() + "@support.local";
+            var ticketMsg2Id = Guid.NewGuid().ToString() + "@support.local";
+
+            var tMsgTicket1 = new MimeMessage();
+            tMsgTicket1.From.Add(new MailboxAddress("Client Services", "support@vendor.com"));
+            tMsgTicket1.To.Add(new MailboxAddress(username, username));
+            tMsgTicket1.Subject = "Ticket #9281: Access Issue";
+            tMsgTicket1.Body = new TextPart("plain") { Text = "Hello,\n\nWe have received your request regarding login issues. Can you please confirm your browser version?" };
+            tMsgTicket1.Date = DateTimeOffset.Now.AddDays(-3);
+            tMsgTicket1.MessageId = ticketMsg1Id;
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsgTicket1, new[] { (username, (string?)null, (string?)"Work") });
+
+            var tMsgTicket2 = new MimeMessage();
+            tMsgTicket2.From.Add(new MailboxAddress("Client Services", "support@vendor.com"));
+            tMsgTicket2.To.Add(new MailboxAddress(username, username));
+            tMsgTicket2.Subject = "Re: Ticket #9281: Access Issue";
+            tMsgTicket2.Body = new TextPart("plain") { Text = "Thanks for the info. We have applied a fix. Please try again." };
+            tMsgTicket2.Date = DateTimeOffset.Now.AddDays(-1);
+            tMsgTicket2.MessageId = ticketMsg2Id;
+            tMsgTicket2.InReplyTo = ticketMsg1Id;
+            tMsgTicket2.References.Add(ticketMsg1Id);
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsgTicket2, new[] { (username, (string?)null, (string?)"Work") });
+
+
+            // 6. Team Lunch Thread
+            var lunchMsg1Id = Guid.NewGuid().ToString() + "@fun.local";
+            var lunchMsg2Id = Guid.NewGuid().ToString() + "@fun.local";
+            var lunchMsg3Id = Guid.NewGuid().ToString() + "@fun.local";
+            var lunchMsg4Id = Guid.NewGuid().ToString() + "@fun.local";
+
+            var tMsgLunch1 = new MimeMessage();
+            tMsgLunch1.From.Add(new MailboxAddress("Sarah", "sarah@company.com"));
+            tMsgLunch1.To.Add(new MailboxAddress("Team", "team@company.com"));
+            tMsgLunch1.Subject = "Team Lunch Friday?";
+            tMsgLunch1.Body = new TextPart("plain") { Text = "Hey everyone,\n\nThinking of going to that new italian place on Friday. Thoughts?" };
+            tMsgLunch1.Date = DateTimeOffset.Now.AddHours(-5);
+            tMsgLunch1.MessageId = lunchMsg1Id;
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsgLunch1, new[] { (username, (string?)null, (string?)"Social") });
+
+            var tMsgLunch2 = new MimeMessage();
+            tMsgLunch2.From.Add(new MailboxAddress("Mike", "mike@company.com"));
+            tMsgLunch2.To.Add(new MailboxAddress("Sarah", "sarah@company.com"));
+            tMsgLunch2.Cc.Add(new MailboxAddress("Team", "team@company.com"));
+            tMsgLunch2.Subject = "Re: Team Lunch Friday?";
+            tMsgLunch2.Body = new TextPart("plain") { Text = "I'm in! 🍕" };
+            tMsgLunch2.Date = DateTimeOffset.Now.AddHours(-4);
+            tMsgLunch2.MessageId = lunchMsg2Id;
+            tMsgLunch2.InReplyTo = lunchMsg1Id;
+            tMsgLunch2.References.Add(lunchMsg1Id);
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsgLunch2, new[] { (username, (string?)null, (string?)"Social") });
+
+            var tMsgLunch3 = new MimeMessage();
+            tMsgLunch3.From.Add(new MailboxAddress("John", "john@company.com"));
+            tMsgLunch3.To.Add(new MailboxAddress("Sarah", "sarah@company.com"));
+            tMsgLunch3.Cc.Add(new MailboxAddress("Team", "team@company.com"));
+            tMsgLunch3.Subject = "Re: Team Lunch Friday?";
+            tMsgLunch3.Body = new TextPart("plain") { Text = "Can't make it, deadline looming. Enjoy!" };
+            tMsgLunch3.Date = DateTimeOffset.Now.AddHours(-3);
+            tMsgLunch3.MessageId = lunchMsg3Id;
+            tMsgLunch3.InReplyTo = lunchMsg2Id;
+            tMsgLunch3.References.Add(lunchMsg1Id);
+            tMsgLunch3.References.Add(lunchMsg2Id);
+            await _mailRepository.SaveMessageWithUserStatesAsync(tMsgLunch3, new[] { (username, (string?)null, (string?)"Social") });
+
+            var tMsgLunch4 = new MimeMessage();
+            tMsgLunch4.From.Add(new MailboxAddress("Sarah", "sarah@company.com"));
+            tMsgLunch4.To.Add(new MailboxAddress("Team", "team@company.com"));
+            tMsgLunch4.Subject = "Re: Team Lunch Friday?";
+            tMsgLunch4.Body = new TextPart("plain") { Text = "Ok, table booked for 6 people at 12:30." };
+            tMsgLunch4.Date = DateTimeOffset.Now.AddHours(-1);
+            TempData["SuccessMessage"] = $"Demo data generated successfully for user {username}.";
             return RedirectToAction("Index");
         }
         catch (Exception ex)
         {
-            // Ideally use TempData to show error
+            TempData["ErrorMessage"] = $"Error generating demo data: {ex.Message}";
             return RedirectToAction("Index");
         }
     }
@@ -177,7 +293,7 @@ public class AdminController : Controller
             }
 
             var (userMessages, _) = await _mailRepository.GetMessagesAsync(username, "", 1, 100);
-            var demoEmailSubjects = new[] { "Urgent: Server Update Required", "Welcome to the team!", "Meeting Notes" };
+            var demoEmailSubjects = new[] { "Urgent: Server Update Required", "Welcome to the team!", "Meeting Notes", "Project Phoenix Kickoff", "Re: Project Phoenix Kickoff" };
 
             foreach (var msg in userMessages.Where(m => demoEmailSubjects.Contains(m.Subject)))
             {
@@ -188,11 +304,12 @@ public class AdminController : Controller
                 }
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Ignore errors
+            TempData["ErrorMessage"] = $"Error clearing demo data: {ex.Message}";
         }
 
+        TempData["SuccessMessage"] = $"Demo data cleared successfully for user {username}.";
         return RedirectToAction("Index");
     }
 
