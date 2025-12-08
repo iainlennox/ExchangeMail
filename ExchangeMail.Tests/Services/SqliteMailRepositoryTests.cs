@@ -12,6 +12,8 @@ public class SqliteMailRepositoryTests
 {
     private readonly ExchangeMailContext _context;
     private readonly Mock<ILogRepository> _mockLogRepo;
+    private readonly Mock<IAiEmailService> _mockAiEmailService;
+    private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly SqliteMailRepository _repository;
 
     public SqliteMailRepositoryTests()
@@ -22,7 +24,10 @@ public class SqliteMailRepositoryTests
 
         _context = new ExchangeMailContext(options);
         _mockLogRepo = new Mock<ILogRepository>();
-        _repository = new SqliteMailRepository(_context, _mockLogRepo.Object);
+        _mockAiEmailService = new Mock<IAiEmailService>();
+        _mockUserRepo = new Mock<IUserRepository>();
+
+        _repository = new SqliteMailRepository(_context, _mockLogRepo.Object, _mockAiEmailService.Object, _mockUserRepo.Object);
 
         // Seed a user
         _context.Users.Add(new UserEntity { Username = "user@example.com", Password = "password" });

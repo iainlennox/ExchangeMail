@@ -9,20 +9,24 @@ public class SqliteMailRepository : IMailRepository
 {
     private readonly ExchangeMailContext _context;
     private readonly ILogRepository _logRepository;
+    private readonly IAiEmailService _aiEmailService;
+    private readonly IUserRepository _userRepository;
 
-    public SqliteMailRepository(ExchangeMailContext context, ILogRepository logRepository)
+    public SqliteMailRepository(ExchangeMailContext context, ILogRepository logRepository, IAiEmailService aiEmailService, IUserRepository userRepository)
     {
         _context = context;
         _logRepository = logRepository;
+        _aiEmailService = aiEmailService;
+        _userRepository = userRepository;
     }
 
     public async Task SaveMessageAsync(MimeMessage message, string? folderName = null, string? owner = null, bool isImported = false)
     {
-        var userStates = new List<(string UserEmail, string? Folder)>();
+        var userStates = new List<(string UserEmail, string? Folder, string? Labels)>();
 
         if (!string.IsNullOrEmpty(owner))
         {
-            userStates.Add((owner, folderName));
+            userStates.Add((owner, folderName, null));
         }
         else
         {
@@ -31,7 +35,7 @@ public class SqliteMailRepository : IMailRepository
             {
                 if (message.To.ToString().Contains(user.Username) || (message.Cc != null && message.Cc.ToString().Contains(user.Username)))
                 {
-                    userStates.Add((user.Username, folderName));
+                    userStates.Add((user.Username, folderName, null));
                 }
             }
         }
@@ -39,7 +43,7 @@ public class SqliteMailRepository : IMailRepository
         await SaveMessageWithUserStatesAsync(message, userStates);
     }
 
-    public async Task SaveMessageWithUserStatesAsync(MimeMessage message, IEnumerable<(string UserEmail, string? Folder)> userStates)
+    public async Task SaveMessageWithUserStatesAsync(MimeMessage message, IEnumerable<(string UserEmail, string? Folder, string? Labels)> userStates)
     {
         await _logRepository.LogAsync("Info", "Repository", $"Saving message from {message.From} for {userStates.Count()} users.");
 
@@ -61,27 +65,94 @@ public class SqliteMailRepository : IMailRepository
 
         _context.Messages.Add(messageEntity);
 
+        // Pre-calculate labeling if needed
+        string? generatedLabels = null;
+        bool labelsGenerated = false;
+        string contentForAi = message.TextBody ?? message.HtmlBody ?? "";
+
         foreach (var state in userStates)
         {
+            string? labels = state.Labels; // Use provided labels if any
+
+            // If no explicit labels, try auto-labeling if enabled
+            if (string.IsNullOrEmpty(labels))
+            {
+                bool autoLabelEnabled = await _userRepository.GetAutoLabelingAsync(state.UserEmail);
+                if (autoLabelEnabled)
+                {
+                    if (!labelsGenerated)
+                    {
+                        try
+                        {
+                            generatedLabels = await _aiEmailService.GetLabelsAsync(contentForAi);
+                            labelsGenerated = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            await _logRepository.LogAsync("Error", "Repository-AI", "Failed to generate labels", ex);
+                        }
+                    }
+                    labels = generatedLabels;
+                }
+            }
+
+            // Determine Focused Status
+            bool isFocused = true;
+            string aiLabels = labels ?? "";
+
+            // 1. Check AI Labels if available
+            if (!string.IsNullOrEmpty(aiLabels))
+            {
+                var lowerLabels = aiLabels.ToLowerInvariant();
+                if (lowerLabels.Contains("marketing") ||
+                    lowerLabels.Contains("social") ||
+                    lowerLabels.Contains("promotions") ||
+                    lowerLabels.Contains("updates"))
+                {
+                    isFocused = false;
+                }
+            }
+            // 2. Fallback to Headers
+            else
+            {
+                var headers = message.Headers.ToString();
+                if (headers.Contains("List-Unsubscribe") ||
+                    headers.Contains("Precedence: bulk") ||
+                    headers.Contains("Precedence: list"))
+                {
+                    isFocused = false;
+                }
+            }
+
             _context.UserMessages.Add(new UserMessageEntity
             {
                 UserId = state.UserEmail,
                 MessageId = messageId,
                 Folder = state.Folder,
                 IsRead = false,
-                IsDeleted = false
+                IsDeleted = false,
+                Labels = labels,
+                IsFocused = isFocused
             });
         }
 
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox")
+    public async Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox", bool? isFocused = null)
     {
         var query = from um in _context.UserMessages
                     join m in _context.Messages on um.MessageId equals m.Id
                     where um.UserId == userEmail
                     select new { um, m };
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            searchString = searchString.ToLower();
+            query = query.Where(x => x.m.Subject.ToLower().Contains(searchString) ||
+                                     x.m.From.ToLower().Contains(searchString) ||
+                                     x.m.RawContent.ToString().ToLower().Contains(searchString));
+        }
 
         if (folder.Equals("Deleted Items", StringComparison.OrdinalIgnoreCase))
         {
@@ -90,30 +161,27 @@ public class SqliteMailRepository : IMailRepository
         else if (folder.Equals("Inbox", StringComparison.OrdinalIgnoreCase))
         {
             query = query.Where(x => !x.um.IsDeleted && x.um.Folder == null);
+            if (isFocused.HasValue)
+            {
+                query = query.Where(x => x.um.IsFocused == isFocused.Value);
+            }
         }
         else
         {
             query = query.Where(x => !x.um.IsDeleted && x.um.Folder == folder);
         }
 
-        if (!string.IsNullOrEmpty(searchString))
-        {
-            searchString = searchString.ToLower();
-            query = query.Where(x => x.m.Subject.ToLower().Contains(searchString)
-                                  || x.m.From.ToLower().Contains(searchString)
-                                  || x.m.To.ToLower().Contains(searchString));
-        }
-
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var entities = await query
             .OrderByDescending(x => x.m.Date)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(x => new { x.m, x.um })
             .ToListAsync();
 
         var messages = new List<MimeMessage>();
-        foreach (var item in items)
+        foreach (var item in entities)
         {
             using var stream = new MemoryStream(item.m.RawContent);
             var message = await MimeMessage.LoadAsync(stream);
@@ -124,6 +192,14 @@ public class SqliteMailRepository : IMailRepository
             {
                 message.Headers.Add("X-Is-Read", "true");
             }
+
+            if (!string.IsNullOrEmpty(item.um.Labels))
+            {
+                message.Headers.Add("X-Labels", item.um.Labels);
+            }
+
+            message.Headers.Add("X-Is-Focused", item.um.IsFocused.ToString());
+
             messages.Add(message);
         }
 
@@ -136,6 +212,16 @@ public class SqliteMailRepository : IMailRepository
         if (userMessage != null)
         {
             userMessage.IsRead = true;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task MarkAsUnreadAsync(string id, string userEmail)
+    {
+        var userMessage = await _context.UserMessages.FirstOrDefaultAsync(um => um.MessageId == id && um.UserId == userEmail);
+        if (userMessage != null)
+        {
+            userMessage.IsRead = false;
             await _context.SaveChangesAsync();
         }
     }
@@ -198,6 +284,11 @@ public class SqliteMailRepository : IMailRepository
             if (userMessage.IsRead)
             {
                 message.Headers.Add("X-Is-Read", "true");
+            }
+
+            if (!string.IsNullOrEmpty(userMessage.Labels))
+            {
+                message.Headers.Add("X-Labels", userMessage.Labels);
             }
         }
 
@@ -310,14 +401,6 @@ public class SqliteMailRepository : IMailRepository
 
     public async Task CopyMessageAsync(string messageId, string folderName, string userEmail)
     {
-        // Copying a message in this architecture means creating a NEW MessageEntity?
-        // Or just a NEW UserMessageEntity pointing to the same MessageEntity?
-        // If we point to the same MessageEntity, it's efficient.
-        // But if the user deletes one "copy", the other should remain.
-        // Since UserMessageEntity tracks state, we can have multiple UserMessageEntities for the same user pointing to the same MessageEntity?
-        // But (UserId, MessageId) might be unique?
-        // Let's assume we want a full copy for now to be safe and independent.
-
         folderName = System.Net.WebUtility.UrlDecode(folderName);
         var originalMessage = await _context.Messages.AsNoTracking().FirstOrDefaultAsync(m => m.Id == messageId);
 
@@ -344,11 +427,21 @@ public class SqliteMailRepository : IMailRepository
                 UserId = userEmail,
                 MessageId = newMessageId,
                 Folder = (folderName == "Inbox" || folderName == "Deleted Items") ? null : folderName,
-                IsRead = false, // Or copy read state?
+                IsRead = false,
                 IsDeleted = (folderName == "Deleted Items")
             };
             _context.UserMessages.Add(newUserMessage);
 
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task UpdateMessageLabelsAsync(string messageId, string userId, string labels)
+    {
+        var userMessage = await _context.UserMessages.FirstOrDefaultAsync(um => um.MessageId == messageId && um.UserId == userId);
+        if (userMessage != null)
+        {
+            userMessage.Labels = labels;
             await _context.SaveChangesAsync();
         }
     }

@@ -15,4 +15,6 @@ public interface IUserRepository
     Task<string?> GetSignatureAsync(string username);
     Task UpdateAnimationsAsync(string username, bool enableAnimations);
     Task<bool> GetAnimationsAsync(string username);
+    Task UpdateAutoLabelingAsync(string username, bool enableAutoLabeling);
+    Task<bool> GetAutoLabelingAsync(string username);
 }

@@ -63,6 +63,8 @@ builder.Services.AddScoped<ILogRepository, SqliteLogRepository>();
 builder.Services.AddScoped<ISafeSenderRepository, SqliteSafeSenderRepository>();
 builder.Services.AddScoped<IContactRepository, SqliteContactRepository>();
 builder.Services.AddScoped<IBlockListRepository, SqliteBlockListRepository>();
+builder.Services.AddScoped<ICalendarRepository, SqliteCalendarRepository>();
+builder.Services.AddScoped<ITaskRepository, SqliteTaskRepository>();
 builder.Services.AddScoped<IMailRuleRepository, SqliteMailRuleRepository>();
 builder.Services.AddScoped<IMailRuleService, MailRuleService>();
 builder.Services.AddScoped<IRuleMatcher, RuleMatcher>();
@@ -72,6 +74,8 @@ builder.Services.AddScoped<HtmlSanitizerService>();
 builder.Services.AddScoped<PstImportService>();
 builder.Services.AddSingleton<ImportStatusService>();
 builder.Services.AddSingleton<SmtpServer.Storage.IMessageStore, SmtpMessageStore>();
+builder.Services.AddScoped<IAiEmailService, AiEmailService>();
+builder.Services.AddHttpClient();
 builder.Services.AddHostedService<SmtpHostedService>();
 // builder.Services.AddHostedService<ExchangeMail.Web.Services.Imap.ImapHostedService>();
 

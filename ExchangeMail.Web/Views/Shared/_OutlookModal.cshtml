@@ -1,0 +1,105 @@
+<div class="modal fade" id="outlookModal" tabindex="-1" aria-labelledby="outlookModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold" id="outlookModalLabel"><i
+                            class="bi bi-stars text-primary me-2"></i>Today's Outlook</h5>
+                    <p class="text-muted small mb-0 ms-1">Here is your daily briefing</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- AI Summary Section -->
+                <div class="mb-4">
+                    <h6 class="text-uppercase text-muted small fw-bold mb-2" id="outlook-briefing-header">Morning
+                        Briefing</h6>
+                    <div id="outlook-summary-content">
+                        <!-- Skeleton for Summary -->
+                        <div class="skeleton-text mb-2" style="width: 100%;"></div>
+                        <div class="skeleton-text mb-2" style="width: 90%;"></div>
+                        <div class="skeleton-text mb-2" style="width: 95%;"></div>
+                        <div class="skeleton-text" style="width: 80%;"></div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Calendar -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-body-tertiary">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted small fw-bold mb-3"><i
+                                        class="bi bi-calendar-event me-2"></i>Scheduled</h6>
+                                <div id="outlook-events-list">
+                                    <!-- Skeleton Items -->
+                                    <div class="d-flex mb-3">
+                                        <div class="skeleton-box me-2"
+                                            style="width: 40px; height: 40px; border-radius: 8px;"></div>
+                                        <div class="flex-grow-1">
+                                            <div class="skeleton-text mb-1" style="width: 80%;"></div>
+                                            <div class="skeleton-text" style="width: 50%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex mb-3">
+                                        <div class="skeleton-box me-2"
+                                            style="width: 40px; height: 40px; border-radius: 8px;"></div>
+                                        <div class="flex-grow-1">
+                                            <div class="skeleton-text mb-1" style="width: 70%;"></div>
+                                            <div class="skeleton-text" style="width: 40%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-body-tertiary">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted small fw-bold mb-3"><i
+                                        class="bi bi-list-check me-2"></i>Top Tasks</h6>
+                                <div id="outlook-tasks-list">
+                                    <!-- Skeleton Items -->
+                                    <div class="mb-2">
+                                        <div class="skeleton-text mb-1" style="width: 90%;"></div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="skeleton-text mb-1" style="width: 85%;"></div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <div class="skeleton-text mb-1" style="width: 60%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emails -->
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-body-tertiary">
+                            <div class="card-body">
+                                <h6 class="card-title text-uppercase text-muted small fw-bold mb-3"><i
+                                        class="bi bi-envelope-exclamation me-2"></i>Attention Needed</h6>
+                                <div id="outlook-emails-list">
+                                    <!-- Skeleton Items -->
+                                    <div class="mb-3">
+                                        <div class="skeleton-text mb-1" style="width: 40%;"></div>
+                                        <div class="skeleton-text" style="width: 90%;"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="skeleton-text mb-1" style="width: 30%;"></div>
+                                        <div class="skeleton-text" style="width: 80%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>

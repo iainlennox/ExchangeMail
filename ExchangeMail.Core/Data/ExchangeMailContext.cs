@@ -29,4 +29,6 @@ public class ExchangeMailContext : DbContext
     public DbSet<MailRuleEntity> MailRules { get; set; }
     public DbSet<MailRuleConditionEntity> MailRuleConditions { get; set; }
     public DbSet<MailRuleActionEntity> MailRuleActions { get; set; }
+    public DbSet<CalendarEventEntity> CalendarEvents { get; set; }
+    public DbSet<TaskEntity> Tasks { get; set; }
 }

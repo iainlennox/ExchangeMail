@@ -166,3 +166,127 @@ window.openSettingsModal = function () {
     var modal = new bootstrap.Modal(document.getElementById('settingsModal'));
     modal.show();
 };
+
+window.showOutlookModal = function () {
+    var modalEl = document.getElementById('outlookModal');
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    // Reset Skeletons
+    const summarySkeleton = `
+        <div class="skeleton-text mb-2" style="width: 100%;"></div>
+        <div class="skeleton-text mb-2" style="width: 90%;"></div>
+        <div class="skeleton-text mb-2" style="width: 95%;"></div>
+        <div class="skeleton-text" style="width: 80%;"></div>
+     `;
+
+    const eventSkeleton = `
+        <div class="d-flex mb-3">
+            <div class="skeleton-box me-2" style="width: 40px; height: 40px; border-radius: 8px;"></div>
+            <div class="flex-grow-1">
+                <div class="skeleton-text mb-1" style="width: 80%;"></div>
+                <div class="skeleton-text" style="width: 50%;"></div>
+            </div>
+        </div>
+        <div class="d-flex mb-3">
+            <div class="skeleton-box me-2" style="width: 40px; height: 40px; border-radius: 8px;"></div>
+            <div class="flex-grow-1">
+                <div class="skeleton-text mb-1" style="width: 70%;"></div>
+                <div class="skeleton-text" style="width: 40%;"></div>
+            </div>
+        </div>
+     `;
+
+    const listSkeleton = `
+        <div class="mb-2">
+            <div class="skeleton-text mb-1" style="width: 90%;"></div>
+        </div>
+        <div class="mb-2">
+            <div class="skeleton-text mb-1" style="width: 85%;"></div>
+        </div>
+        <div class="mb-2">
+            <div class="skeleton-text mb-1" style="width: 60%;"></div>
+        </div>
+     `;
+
+    const emailSkeleton = `
+        <div class="mb-3">
+            <div class="skeleton-text mb-1" style="width: 40%;"></div>
+            <div class="skeleton-text" style="width: 90%;"></div>
+        </div>
+        <div class="mb-3">
+            <div class="skeleton-text mb-1" style="width: 30%;"></div>
+            <div class="skeleton-text" style="width: 80%;"></div>
+        </div>
+     `;
+
+    document.getElementById('outlook-summary-content').innerHTML = summarySkeleton;
+    document.getElementById('outlook-events-list').innerHTML = eventSkeleton;
+    document.getElementById('outlook-tasks-list').innerHTML = listSkeleton;
+    document.getElementById('outlook-emails-list').innerHTML = emailSkeleton;
+
+    fetch('/Outlook/GetSummary')
+        .then(response => response.json())
+        .then(data => {
+            // Update Greeting Header
+            if (data.greeting) {
+                document.getElementById('outlook-briefing-header').innerText = data.greeting;
+            }
+
+            // Populate Summary
+            document.getElementById('outlook-summary-content').innerHTML = data.summary;
+
+            // Populate Events
+            const eventsContainer = document.getElementById('outlook-events-list');
+            if (data.events && data.events.length > 0) {
+                eventsContainer.innerHTML = data.events.map(e => `
+                    <div class="d-flex mb-3 align-items-center">
+                        <div class="me-3 text-center bg-primary-subtle text-primary rounded p-1" style="min-width: 50px;">
+                            <small class="fw-bold d-block">${e.time}</small>
+                        </div>
+                        <div>
+                            <div class="fw-bold">${e.subject}</div>
+                            <small class="text-muted"><i class="bi bi-geo-alt-fill me-1"></i>${e.location || 'No Location'}</small>
+                        </div>
+                    </div>
+                 `).join('');
+            } else {
+                eventsContainer.innerHTML = '<p class="text-muted small">No events scheduled today.</p>';
+            }
+
+            // Populate Tasks
+            const tasksContainer = document.getElementById('outlook-tasks-list');
+            if (data.tasks && data.tasks.length > 0) {
+                tasksContainer.innerHTML = '<ul class="list-group list-group-flush">' +
+                    data.tasks.map(t => `
+                        <li class="list-group-item px-0 py-2 border-0 bg-transparent d-flex align-items-center">
+                            <i class="bi bi-circle me-2 text-warning"></i>
+                            <span class="${t.overdue ? 'text-danger' : ''}">${t.subject}</span>
+                            ${t.overdue ? '<span class="badge bg-danger ms-auto">Overdue</span>' : ''}
+                        </li>
+                    `).join('') +
+                    '</ul>';
+            } else {
+                tasksContainer.innerHTML = '<p class="text-muted small">No pending tasks.</p>';
+            }
+
+            // Populate Emails
+            const emailsContainer = document.getElementById('outlook-emails-list');
+            if (data.emails && data.emails.length > 0) {
+                emailsContainer.innerHTML = '<div class="list-group list-group-flush">' +
+                    data.emails.map(m => `
+                        <div class="list-group-item px-0 py-2 border-0 bg-transparent">
+                            <div class="fw-bold text-truncate">${m.from}</div>
+                            <div class="small text-truncate text-muted">${m.subject}</div>
+                        </div>
+                    `).join('') +
+                    '</div>';
+            } else {
+                emailsContainer.innerHTML = '<p class="text-muted small">No important unread emails.</p>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('outlook-summary-content').innerHTML = '<p class="text-danger">Failed to load briefing.</p>';
+        });
+};

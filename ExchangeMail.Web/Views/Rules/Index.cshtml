@@ -8,6 +8,9 @@
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
         <h5 class="m-0">Mail Rules</h5>
+        <a asp-action="Editor" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Create New Rule
+        </a>
     </div>
 
     <div class="row p-3">
@@ -40,8 +43,10 @@
                                         @rule.Actions.Count actions
                                     </td>
                                     <td class="text-end">
-                                        <!-- Edit not implemented for complex rules yet -->
-                                    <form asp-action="Delete" asp-route-id="@rule.Id" method="post" class="d-inline">
+                                        <a asp-action="Editor" asp-route-id="@rule.Id"
+                                        class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+                                        <form asp-action="Delete" asp-route-id="@rule.Id" method="post" class="d-inline"
+                                        onsubmit="return confirm('Are you sure?');">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                         </form>
                                     </td>
@@ -58,35 +63,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    function editRule(id, name, sender, subject, folder) {
-        document.getElementById('ruleId').value = id;
-        document.getElementById('ruleName').value = name;
-        document.getElementById('ruleSender').value = sender || '';
-        document.getElementById('ruleSubject').value = subject || '';
-        document.getElementById('ruleFolder').value = folder;
-
-        document.getElementById('formHeader').innerText = 'Edit Rule';
-        document.getElementById('submitBtn').innerText = 'Update Rule';
-        document.getElementById('cancelBtn').style.display = 'block';
-
-        // Change form action to Edit
-        document.getElementById('ruleForm').action = '/Rules/Edit';
-    }
-
-    function resetForm() {
-        document.getElementById('ruleId').value = '0';
-        document.getElementById('ruleName').value = '';
-        document.getElementById('ruleSender').value = '';
-        document.getElementById('ruleSubject').value = '';
-        document.getElementById('ruleFolder').selectedIndex = 0;
-
-        document.getElementById('formHeader').innerText = 'Create New Rule';
-        document.getElementById('submitBtn').innerText = 'Add Rule';
-        document.getElementById('cancelBtn').style.display = 'none';
-
-        // Change form action back to Create
-        document.getElementById('ruleForm').action = '/Rules/Create';
-    }
-</script>

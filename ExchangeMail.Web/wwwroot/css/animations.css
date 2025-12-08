@@ -26,3 +26,34 @@ body.enable-animations .compose-container {
         transform: translateY(0);
     }
 }
+
+/* Skeleton Shimmer Animation */
+.skeleton-text {
+    height: 0.8rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    background: #e0e0e0;
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+.skeleton-box {
+    background: #e0e0e0;
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+}
+
+[data-bs-theme="dark"] .skeleton-text,
+[data-bs-theme="dark"] .skeleton-box {
+    background: #2b3035;
+    background: linear-gradient(110deg, #2b3035 8%, #3d4248 18%, #2b3035 33%);
+    background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+    to {
+        background-position-x: -200%;
+    }
+}

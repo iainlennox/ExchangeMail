@@ -96,4 +96,20 @@ public class SqliteUserRepository : IUserRepository
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         return user?.EnableAnimations ?? false;
     }
+
+    public async Task UpdateAutoLabelingAsync(string username, bool enableAutoLabeling)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            user.EnableAutoLabeling = enableAutoLabeling;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<bool> GetAutoLabelingAsync(string username)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        return user?.EnableAutoLabeling ?? false;
+    }
 }

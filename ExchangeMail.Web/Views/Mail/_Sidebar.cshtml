@@ -6,6 +6,7 @@
         <i class="bi bi-pencil-square me-2"></i> <span class="sidebar-text">New Mail</span>
     </a>
 
+
     <div class="flex-grow-1">
         <h6 class="text-uppercase text-muted small fw-bold mb-2 px-2">Folders</h6>
         <div class="list-group list-group-flush">
@@ -58,13 +59,37 @@
 
             @if (ViewBag.Folders != null)
             {
+                // Simple helper to guess icon and color based on folder name
+                (string Icon, string Color) GetFolderStyle(string name)
+                {
+                    name = name.ToLower();
+                    if (name.Contains("finance") || name.Contains("invoice") || name.Contains("bank")) return ("bi-cash-coin",
+                    "text-success");
+                    if (name.Contains("shopping") || name.Contains("order") || name.Contains("amazon")) return ("bi-cart-fill",
+                    "text-warning");
+                    if (name.Contains("social") || name.Contains("facebook") || name.Contains("twitter") ||
+                    name.Contains("linkedin")) return ("bi-people-fill", "text-info");
+                    if (name.Contains("marketing") || name.Contains("newsletter") || name.Contains("promo")) return
+                    ("bi-megaphone-fill", "text-primary");
+                    if (name.Contains("notification") || name.Contains("alert")) return ("bi-bell-fill", "text-danger");
+                    if (name.Contains("work") || name.Contains("job") || name.Contains("office")) return ("bi-briefcase-fill",
+                    "text-secondary");
+                    if (name.Contains("travel") || name.Contains("flight") || name.Contains("hotel")) return
+                    ("bi-airplane-fill", "text-info");
+                    if (name.Contains("receipt")) return ("bi-receipt", "text-secondary");
+
+                    return ("bi-folder-fill", "text-secondary"); // Default
+                }
+
                 foreach (var folder in (IEnumerable<string>)ViewBag.Folders)
                 {
+                    var style = GetFolderStyle(folder);
                     <a asp-controller="Mail" asp-action="Index" asp-route-folder="@folder"
                 class="list-group-item list-group-item-action border-0 rounded @(ViewBag.Folder == folder ? "active" : "") droppable-folder"
                 data-folder="@folder" title="@folder">
                         <div class="d-flex justify-content-between align-items-center w-100">
-                            <span><i class="bi bi-folder me-2"></i> <span class="sidebar-text">@folder</span></span>
+                            <span><i class="bi @style.Icon @style.Color me-2"></i> <span
+                            class="sidebar-text">@folder</span></span>
                             <div class="d-flex align-items-center">
                                 @{
                                     int folderCount = 0;
@@ -94,6 +119,14 @@
             <a asp-controller="Contacts" asp-action="Index"
                 class="list-group-item list-group-item-action border-0 rounded text-muted" title="Contacts">
                 <i class="bi bi-person-lines-fill me-2"></i> <span class="sidebar-text">Contacts</span>
+            </a>
+            <a asp-controller="Calendar" asp-action="Index"
+                class="list-group-item list-group-item-action border-0 rounded text-muted" title="Calendar">
+                <i class="bi bi-calendar-event me-2"></i> <span class="sidebar-text">Calendar</span>
+            </a>
+            <a asp-controller="Tasks" asp-action="Index"
+                class="list-group-item list-group-item-action border-0 rounded text-muted" title="Tasks">
+                <i class="bi bi-list-check me-2"></i> <span class="sidebar-text">Tasks</span>
             </a>
 
         </div>

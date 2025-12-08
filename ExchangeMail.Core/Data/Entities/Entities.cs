@@ -11,6 +11,7 @@ public class UserEntity
     public bool IsAdmin { get; set; }
     public string? Signature { get; set; }
     public bool EnableAnimations { get; set; }
+    public bool EnableAutoLabeling { get; set; }
 }
 
 public class MessageEntity

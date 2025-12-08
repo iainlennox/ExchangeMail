@@ -35,7 +35,7 @@ public class LogReaderTests
 
         foreach (var log in logs)
         {
-            _output.WriteLine($"[{log.Timestamp}] {log.Level} - {log.Category}: {log.Message}");
+            _output.WriteLine($"[{log.Date}] {log.Level} - {log.Source}: {log.Message}");
         }
     }
 }

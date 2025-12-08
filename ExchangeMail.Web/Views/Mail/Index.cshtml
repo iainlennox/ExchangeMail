@@ -11,6 +11,15 @@
 
     <!-- Message List -->
     <div class="mail-list">
+        @if (ViewBag.Folder == "Inbox")
+        {
+            <div class="d-flex border-bottom">
+                <a href="@Url.Action("Index", new { folder = "Inbox", focused = true })"
+                class="flex-fill text-center p-2 text-decoration-none @(ViewBag.Focused == true ? "fw-bold border-bottom border-primary border-2 text-primary" : "text-muted")">Focused</a>
+                <a href="@Url.Action("Index", new { folder = "Inbox", focused = false })"
+                class="flex-fill text-center p-2 text-decoration-none @(ViewBag.Focused == false ? "fw-bold border-bottom border-primary border-2 text-primary" : "text-muted")">Other</a>
+            </div>
+        }
         <partial name="_MessageList" model="Model" />
     </div>
 
@@ -213,6 +222,11 @@
             '<a class="dropdown-item" href="#" id="ctx-reply"><i class="bi bi-reply me-2"></i>Reply</a>' +
             '<a class="dropdown-item" href="#" id="ctx-reply-all"><i class="bi bi-reply-all me-2"></i>Reply all</a>' +
             '<a class="dropdown-item" href="#" id="ctx-forward"><i class="bi bi-forward me-2"></i>Forward</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-reply-all"><i class="bi bi-reply-all me-2"></i>Reply all</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-forward"><i class="bi bi-forward me-2"></i>Forward</a>' +
+            '<div class="dropdown-divider"></div>' +
+            '<a class="dropdown-item" href="#" id="ctx-mark-read"><i class="bi bi-envelope-open me-2"></i>Mark as Read</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-mark-unread"><i class="bi bi-envelope me-2"></i>Mark as Unread</a>' +
             '<div class="dropdown-divider"></div>' +
             '<a class="dropdown-item" href="#" id="ctx-delete"><i class="bi bi-trash me-2"></i>Delete</a>' +
             '<div class="dropdown-divider"></div>' +
@@ -315,6 +329,29 @@
             e.preventDefault();
             contextMenu.hide();
             if (selectedMessageId) loadForward(selectedMessageId);
+        });
+
+        $('#ctx-mark-read').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) {
+                $.post('@Url.Action("MarkAsRead", "Mail")', { id: selectedMessageId })
+                    .done(function () {
+                        $('.mail-list-item[data-id="' + selectedMessageId + '"]').removeClass('unread');
+                        // Optional: Decrement unread count, but reload/refresh might be needed for accuracy
+                    });
+            }
+        });
+
+        $('#ctx-mark-unread').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) {
+                $.post('@Url.Action("MarkAsUnread", "Mail")', { id: selectedMessageId })
+                    .done(function () {
+                        $('.mail-list-item[data-id="' + selectedMessageId + '"]').addClass('unread');
+                    });
+            }
         });
 
         $('#ctx-delete').on('click', function (e) {
@@ -490,6 +527,114 @@
                     showModalAlert('Failed to mark all as read.');
                 });
         }
+    }
+
+    function summarizeEmail(id) {
+        var container = document.getElementById('summary-container-' + id);
+        var content = document.getElementById('summary-content-' + id);
+        var btn = document.getElementById('btn-summarize-' + id);
+
+        container.style.display = 'block';
+        content.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Generating summary...';
+        btn.disabled = true;
+
+        fetch('/Mail/Summarize?id=' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    content.innerHTML = data.summary;
+                    // Post-process to add Task buttons
+                    setTimeout(() => {
+                        const headers = content.querySelectorAll('h3');
+                        headers.forEach(h => {
+                            if (h.textContent.includes('Action Items')) {
+                                let sibling = h.nextElementSibling;
+                                while (sibling) {
+                                    if (sibling.tagName === 'UL') {
+                                        sibling.querySelectorAll('li').forEach(li => {
+                                            const text = li.textContent;
+                                            const btn = document.createElement('button');
+                                            btn.className = 'btn btn-sm btn-link text-primary ms-2 p-0 border-0';
+                                            btn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> Add Task';
+                                            btn.title = "Add to Tasks";
+                                            btn.onclick = () => addTaskFromSummary(text, btn);
+                                            li.appendChild(btn);
+                                        });
+                                        break;
+                                    }
+                                    sibling = sibling.nextElementSibling;
+                                }
+                            }
+                        });
+                    }, 100);
+                } else {
+                    content.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>' + (data.message || 'Failed to generate summary.') + '</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                content.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>An error occurred while summarizing.</span>';
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+    }
+
+    function closeSummary(id) {
+        document.getElementById('summary-container-' + id).style.display = 'none';
+    }
+
+    function addTaskFromSummary(text, btn) {
+        // Simple cleanup of text
+        const subject = text.replace('Add Task', '').trim();
+
+        // Show loading state
+        const originalIcon = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div>';
+        btn.disabled = true;
+
+        $.post('/Tasks/SaveTask', { Subject: subject, Priority: 1 })
+            .done(() => {
+                btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Added';
+                setTimeout(() => {
+                    btn.style.display = 'none';
+                }, 2000);
+            })
+            .fail(() => {
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+                alert('Failed to add task.');
+            });
+    }
+
+    function toggleUrgent(id) {
+        var btn = document.getElementById('btn-urgent-' + id);
+        var originalHtml = btn.innerHTML;
+        btn.disabled = true;
+
+        $.post('/Mail/ToggleUrgent', { id: id })
+            .done((data) => {
+                if (data.success) {
+                    if (data.isUrgent) {
+                        btn.classList.add('active');
+                        // Optional: show feedback or reload list to show icon
+                        // For now we just toggle button state
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            })
+            .fail(() => {
+                showModalAlert('Failed to toggle priority.');
+            })
+            .always(() => {
+                btn.disabled = false;
+            });
     }
 </script>
 

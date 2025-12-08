@@ -103,6 +103,26 @@ public class SqliteConfigurationService : IConfigurationService
         await SetValueAsync("InternalRoutingEnabled", enabled.ToString());
     }
 
+    // Summarization Settings
+    public async Task<bool> GetSummarizationEnabledAsync()
+    {
+        var val = await GetValueAsync("SummarizationEnabled");
+        return val == "True";
+    }
+    public async Task SetSummarizationEnabledAsync(bool enabled) => await SetValueAsync("SummarizationEnabled", enabled.ToString());
+
+    public async Task<string> GetSummarizationProviderAsync() => await GetValueAsync("SummarizationProvider") ?? "OpenAI";
+    public async Task SetSummarizationProviderAsync(string provider) => await SetValueAsync("SummarizationProvider", provider);
+
+    public async Task<string> GetOpenAIApiKeyAsync() => await GetValueAsync("OpenAIApiKey") ?? "";
+    public async Task SetOpenAIApiKeyAsync(string apiKey) => await SetValueAsync("OpenAIApiKey", apiKey);
+
+    public async Task<string> GetLocalLlmUrlAsync() => await GetValueAsync("LocalLlmUrl") ?? "http://localhost:1234/v1/chat/completions";
+    public async Task SetLocalLlmUrlAsync(string url) => await SetValueAsync("LocalLlmUrl", url);
+
+    public async Task<string> GetLocalLlmModelNameAsync() => await GetValueAsync("LocalLlmModelName") ?? "local-model";
+    public async Task SetLocalLlmModelNameAsync(string modelName) => await SetValueAsync("LocalLlmModelName", modelName);
+
     private async Task<string?> GetValueAsync(string key)
     {
         var config = await _context.Configurations.FindAsync(key);

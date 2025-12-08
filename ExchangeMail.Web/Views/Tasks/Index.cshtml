@@ -1,0 +1,241 @@
+@{
+    ViewData["Title"] = "Tasks";
+}
+
+<style>
+    .task-item {
+        transition: all 0.2s;
+        border-left: 4px solid transparent;
+    }
+
+    .task-item:hover {
+        background-color: var(--bs-secondary-bg-subtle);
+    }
+
+    .task-item.priority-high {
+        border-left-color: var(--bs-danger);
+    }
+
+    .task-item.priority-normal {
+        border-left-color: var(--bs-primary);
+    }
+
+    .task-item.priority-low {
+        border-left-color: var(--bs-success);
+    }
+
+    .task-completed .task-subject {
+        text-decoration: line-through;
+        color: var(--bs-text-muted);
+    }
+</style>
+
+<div class="d-flex h-100">
+    <!-- Sidebar Filters -->
+    <div class="d-flex flex-column border-end bg-body-tertiary p-3" style="width: 250px;">
+        <h5 class="mb-3">Tasks</h5>
+        <div class="list-group list-group-flush mb-3">
+            <button class="list-group-item list-group-item-action active" id="filter-active"
+                onclick="tasksMgr.filter('active')">
+                <i class="bi bi-list-task me-2"></i> My Tasks
+            </button>
+            <button class="list-group-item list-group-item-action" id="filter-completed"
+                onclick="tasksMgr.filter('completed')">
+                <i class="bi bi-check2-square me-2"></i> Completed
+            </button>
+        </div>
+        <button class="btn btn-primary w-100 mt-auto" onclick="tasksMgr.openAddModal()">
+            <i class="bi bi-plus-lg me-2"></i> New Task
+        </button>
+    </div>
+
+    <!-- Task List -->
+    <div class="flex-grow-1 p-0 overflow-auto bg-body" id="taskListContainer">
+        <!-- JS renders here -->
+    </div>
+</div>
+
+<!-- Add/Edit Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taskModalTitle">Add Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId" name="Id" value="0" />
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-lg" id="taskSubject" name="Subject"
+                            placeholder="What needs to be done?" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <label for="taskDueDate" class="form-label small text-muted">Due Date</label>
+                            <input type="date" class="form-control" id="taskDueDate" name="DueDate">
+                        </div>
+                        <div class="col">
+                            <label for="taskPriority" class="form-label small text-muted">Priority</label>
+                            <select class="form-select" id="taskPriority" name="Priority">
+                                <option value="0">Low</option>
+                                <option value="1" selected>Normal</option>
+                                <option value="2">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label small text-muted">Notes</label>
+                        <textarea class="form-control" id="taskDescription" name="Description" rows="3"
+                            placeholder="Add details..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-danger" id="btnDeleteTask" style="display:none;"
+                    onclick="tasksMgr.deleteTask()">Delete</button>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="tasksMgr.saveTask()">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const tasksMgr = {
+        currentFilter: 'active',
+        tasks: [],
+
+        init: function () {
+            this.loadTasks();
+        },
+
+        loadTasks: function () {
+            const includeCompleted = this.currentFilter === 'completed';
+            $.get('/Tasks/GetTasks', { includeCompleted: includeCompleted })
+                .done(data => {
+                    this.tasks = data;
+                    this.render();
+                });
+        },
+
+        render: function () {
+            const container = $('#taskListContainer');
+            container.empty();
+
+            if (this.tasks.length === 0) {
+                container.html('<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><p>No tasks found.</p></div>');
+                return;
+            }
+
+            const list = $('<div class="list-group list-group-flush"></div>');
+
+            this.tasks.forEach(task => {
+                const priorityClass = task.priority === 2 ? 'priority-high' : (task.priority === 0 ? 'priority-low' : 'priority-normal');
+                const completedClass = task.isCompleted ? 'task-completed' : '';
+                const checkClass = task.isCompleted ? 'bi-check-circle-fill text-success' : 'bi-circle';
+
+                const item = $(`
+                        <div class="list-group-item list-group-item-action p-3 task-item ${priorityClass} ${completedClass}" data-id="${task.id}">
+                            <div class="d-flex align-items-center">
+                                <i class="bi ${checkClass} fs-4 me-3" style="cursor:pointer;" onclick="tasksMgr.toggleComplete(${task.id}, event)"></i>
+                                <div class="flex-grow-1" onclick="tasksMgr.editTask(${task.id})">
+                                    <div class="d-flex justify-content-between align-items-baseline">
+                                        <h6 class="mb-0 task-subject">${task.subject}</h6>
+                                        <small class="text-muted ms-2">${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''}</small>
+                                    </div>
+                                    <p class="mb-0 text-muted small text-truncate" style="max-width: 500px;">${task.description || ''}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                list.append(item);
+            });
+
+            container.append(list);
+        },
+
+        filter: function (type) {
+            this.currentFilter = type;
+            $('.list-group-item').removeClass('active');
+            $(`#filter-${type}`).addClass('active');
+            this.loadTasks();
+        },
+
+        toggleComplete: function (id, event) {
+            event.stopPropagation();
+            $.post('/Tasks/ToggleComplete', { id: id })
+                .done(() => {
+                    this.loadTasks();
+                });
+        },
+
+        openAddModal: function () {
+            $('#taskId').val(0);
+            $('#taskForm')[0].reset();
+            $('#taskModalTitle').text('Add Task');
+            $('#btnDeleteTask').hide();
+            $('#taskModal').modal('show');
+        },
+
+        editTask: function (id) {
+            const task = this.tasks.find(t => t.id === id);
+            if (!task) return;
+
+            $('#taskId').val(task.id);
+            $('#taskSubject').val(task.subject);
+            $('#taskDescription').val(task.description);
+            $('#taskPriority').val(task.priority);
+
+            if (task.dueDate) {
+                // Format Date for Input
+                const d = new Date(task.dueDate);
+                // Adjust for timezone offset to keep date part correct (simple fix for date inputs)
+                const dateStr = d.toISOString().split('T')[0];
+                $('#taskDueDate').val(dateStr);
+            } else {
+                $('#taskDueDate').val('');
+            }
+
+            $('#taskModalTitle').text('Edit Task');
+            $('#btnDeleteTask').show();
+            $('#taskModal').modal('show');
+        },
+
+        saveTask: function () {
+            const form = $('#taskForm');
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+
+            $.post('/Tasks/SaveTask', form.serialize())
+                .done(() => {
+                    $('#taskModal').modal('hide');
+                    this.loadTasks();
+                })
+                .fail(() => {
+                    alert('Failed to save task');
+                });
+        },
+
+        deleteTask: function () {
+            const id = $('#taskId').val();
+            if (!confirm('Delete this task?')) return;
+
+            $.post('/Tasks/DeleteTask', { id: id })
+                .done(() => {
+                    $('#taskModal').modal('hide');
+                    this.loadTasks();
+                });
+        }
+    };
+
+    $(document).ready(() => {
+        tasksMgr.init();
+    });
+</script>
+}

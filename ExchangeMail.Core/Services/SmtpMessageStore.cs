@@ -98,7 +98,7 @@ public class SmtpMessageStore : IMessageStore
                 // Note: Bcc is not in message headers usually, but for local dev we assume To/Cc covers most.
                 // Ideally we would use transaction.Recipients if available.
 
-                var userStates = new List<(string UserEmail, string? Folder)>();
+                var userStates = new List<(string UserEmail, string? Folder, string? Labels)>();
 
                 foreach (var user in localUsers)
                 {
@@ -134,7 +134,7 @@ public class SmtpMessageStore : IMessageStore
                             // If MarkAsRead is true, we might need to a separate call.
                         }
 
-                        userStates.Add((user.Username, folder)); // Folder can be null (Inbox)
+                        userStates.Add((user.Username, folder, null)); // Folder can be null (Inbox), Labels null
                     }
                 }
 

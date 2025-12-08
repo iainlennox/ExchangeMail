@@ -32,6 +32,12 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 ### 👥 Contacts
 -   **Contact Management**: Store and manage your personal address book.
 
+### 🤖 AI Features
+-   **Smart Daily Briefing**: Get a dynamic "Today's Outlook" with a personalized greeting and summary of your day's events and tasks.
+-   **Email Summarization**: One-click AI summarization of long email threads, automatically extracting action items.
+-   **Smart Labels**: Automatically categorizes emails (Work, Personal, Urgent, etc.) and detects potential security threats.
+-   **AI Drafting**: comprehensive AI assistance for drafting professional email replies.
+
 ## Screenshots
 
 ### Inbox View
