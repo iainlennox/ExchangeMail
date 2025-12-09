@@ -19,6 +19,7 @@ public class AdminControllerTests
     private readonly Mock<ILogRepository> _mockLogRepository;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
     private readonly Mock<ICalendarRepository> _mockCalendarRepository;
+    private readonly Mock<IMailRuleService> _mockMailRuleService;
     private readonly AdminController _controller;
     private readonly Mock<ISession> _mockSession;
     private readonly Mock<HttpContext> _mockHttpContext;
@@ -34,13 +35,15 @@ public class AdminControllerTests
         _mockLogRepository = new Mock<ILogRepository>();
         _mockTaskRepository = new Mock<ITaskRepository>();
         _mockCalendarRepository = new Mock<ICalendarRepository>();
+        _mockMailRuleService = new Mock<IMailRuleService>();
         _controller = new AdminController(
             _mockUserRepository.Object,
             _mockConfigurationService.Object,
             _mockMailRepository.Object,
             _mockLogRepository.Object,
             _mockTaskRepository.Object,
-            _mockCalendarRepository.Object);
+            _mockCalendarRepository.Object,
+            _mockMailRuleService.Object);
 
         _mockSession = new Mock<ISession>();
         _mockHttpContext = new Mock<HttpContext>();

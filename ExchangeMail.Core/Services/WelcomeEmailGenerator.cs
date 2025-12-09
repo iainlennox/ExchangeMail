@@ -43,16 +43,16 @@ public static class WelcomeEmailGenerator
             <p>Welcome to your new ExchangeMail account! We're excited to have you on board.</p>
             <p>Here are just a few things you can do with your new mailbox:</p>
             <ul class='feature-list'>
+                <li><strong>AI-Powered Insights</strong>: Get instant daily briefings and smart email summaries.</li>
+                <li><strong>Smart Sorting</strong>: Important emails are automatically prioritized.</li>
                 <li><strong>Send and Receive Emails</strong>: Stay connected with colleagues and friends.</li>
                 <li><strong>Organize with Folders</strong>: Keep your inbox clutter-free by creating custom folders.</li>
-                <li><strong>Manage Contacts</strong>: Store and manage your important contacts easily.</li>
-                <li><strong>Junk Filtering</strong>: Built-in protection against unwanted spam.</li>
             </ul>
             <p>Start exploring your inbox now and make the most of your communication!</p>
         </div>
         <div class='footer'>
             <p>This is an automated message. Please do not reply to this email.</p>
-            <p>&copy; {DateTime.Now.Year} ExchangeMail. All rights reserved.</p>
+            <p>&copy; {DateTime.Now.Year} Lennox Technologies. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -65,15 +65,15 @@ public static class WelcomeEmailGenerator
 Welcome to your new ExchangeMail account! We're excited to have you on board.
 
 Here are just a few things you can do with your new mailbox:
+- AI-Powered Insights: Get instant daily briefings.
+- Smart Sorting: Important emails are prioritized.
 - Send and Receive Emails
 - Organize with Folders
-- Manage Contacts
-- Junk Filtering
 
 Start exploring your inbox now!
 
 This is an automated message.
-(c) {DateTime.Now.Year} ExchangeMail.";
+(c) {DateTime.Now.Year} Lennox Technologies.";
 
         message.Body = bodyBuilder.ToMessageBody();
 

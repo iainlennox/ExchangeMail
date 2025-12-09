@@ -76,6 +76,12 @@ public class RulesController : Controller
         rule.Conditions ??= new List<MailRuleConditionEntity>();
         rule.Actions ??= new List<MailRuleActionEntity>();
 
+        // Ensure folders exist for MoveToFolder actions
+        foreach (var action in rule.Actions.Where(a => a.ActionType == RuleActionType.MoveToFolder && !string.IsNullOrEmpty(a.TargetValue)))
+        {
+            await _mailRepository.CreateFolderAsync(action.TargetValue!, userEmail);
+        }
+
         if (rule.Id == 0)
         {
             await _ruleRepository.AddRuleAsync(rule);

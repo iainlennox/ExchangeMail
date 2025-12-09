@@ -27,12 +27,6 @@ public class MailRuleService : IMailRuleService
             foreach (var rule in systemRules)
             {
                 await _repository.AddRuleAsync(rule);
-
-                // Ensure folders exist for MoveToFolder actions
-                foreach (var action in rule.Actions.Where(a => a.ActionType == RuleActionType.MoveToFolder && !string.IsNullOrEmpty(a.TargetValue)))
-                {
-                    await _mailRepository.CreateFolderAsync(action.TargetValue!, userEmail);
-                }
             }
             rules = systemRules;
         }

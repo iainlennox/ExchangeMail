@@ -15,8 +15,9 @@ public class AdminController : Controller
     private readonly ILogRepository _logRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly ICalendarRepository _calendarRepository;
+    private readonly IMailRuleService _mailRuleService;
 
-    public AdminController(IUserRepository userRepository, IConfigurationService configurationService, IMailRepository mailRepository, ILogRepository logRepository, ITaskRepository taskRepository, ICalendarRepository calendarRepository)
+    public AdminController(IUserRepository userRepository, IConfigurationService configurationService, IMailRepository mailRepository, ILogRepository logRepository, ITaskRepository taskRepository, ICalendarRepository calendarRepository, IMailRuleService mailRuleService)
     {
         _userRepository = userRepository;
         _configurationService = configurationService;
@@ -24,6 +25,7 @@ public class AdminController : Controller
         _logRepository = logRepository;
         _taskRepository = taskRepository;
         _calendarRepository = calendarRepository;
+        _mailRuleService = mailRuleService;
     }
 
     private bool IsAdmin()
@@ -266,6 +268,80 @@ public class AdminController : Controller
         catch (Exception ex)
         {
             TempData["ErrorMessage"] = $"Error generating demo data: {ex.Message}";
+            return RedirectToAction("Index");
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GenerateRuleTestEmails(string username)
+    {
+        if (!IsAdmin()) return RedirectToAction("Login", "Mail");
+
+        try
+        {
+            var today = DateTime.Today;
+
+            // Define Test Scenarios mapped to System Rules
+            var testCases = new List<(string Subject, string From, string Body, string? ExpectedFolder, Dictionary<string, string> Headers)>
+            {
+                // 1. Security
+                ("Suspicious sign in attempt blocked", "security@google.com", "We blocked a sign-in attempt.", "Inbox", new Dictionary<string, string>()), // Should be Flagged only
+
+                // 2. Finance
+                ("Your Bank Statement", "statements@bank.com", "Your statement is ready.", "Finance", new Dictionary<string, string>()),
+                
+                // 3. Shopping
+                ("Order confirmation #12345", "orders@amazon.com", "Thank you for your order.", "Shopping", new Dictionary<string, string>()),
+
+                // 4. Social
+                ("New friend request", "noreply@facebookmail.com", "You have a new friend request.", "Social", new Dictionary<string, string>()),
+                
+                // 5. Marketing
+                ("Huge Sale! 50% Off", "offers@bestbuy.com", "Don't miss out.", "Marketing", new Dictionary<string, string>()),
+
+                // 6. Mailing Lists
+                ("Weekly Newsletter", "newsletter@techcrunch.com", "This week in tech.", "Mailing Lists", new Dictionary<string, string> { { "List-Id", "techcrunch-weekly" } }),
+
+                // 7. Notifications (Catch-all)
+                ("Your ticket has been updated", "noreply@jira.atlassian.net", "Ticket KEY-123 updated.", "Notifications", new Dictionary<string, string>())
+            };
+
+            foreach (var testCase in testCases)
+            {
+                var mimeMessage = new MimeMessage();
+                mimeMessage.From.Add(new MailboxAddress("Test Sender", testCase.From));
+                mimeMessage.To.Add(new MailboxAddress(username, username));
+                mimeMessage.Subject = testCase.Subject;
+                mimeMessage.Body = new TextPart("plain") { Text = testCase.Body };
+                mimeMessage.Date = DateTimeOffset.Now;
+
+                foreach (var header in testCase.Headers)
+                {
+                    mimeMessage.Headers.Add(header.Key, header.Value);
+                }
+
+                // Apply Rules
+                var ruleResult = await _mailRuleService.ApplyRulesAsync(mimeMessage, username);
+
+                string? folder = ruleResult.TargetFolder; // May be null if only Flagged (Security) or no match
+                string? labels = ruleResult.Labels.Any() ? string.Join(",", ruleResult.Labels) : null;
+
+                // Ensure folder exists if rule set it
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    await _mailRepository.CreateFolderAsync(folder, username);
+                }
+
+                var userStates = new List<(string UserEmail, string? Folder, string? Labels)> { (username, folder, labels) };
+                await _mailRepository.SaveMessageWithUserStatesAsync(mimeMessage, userStates);
+            }
+
+            TempData["SuccessMessage"] = $"Rule test emails generated successfully for user {username}. Check your folders.";
+            return RedirectToAction("Index");
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error generating rule test data: {ex.Message}";
             return RedirectToAction("Index");
         }
     }

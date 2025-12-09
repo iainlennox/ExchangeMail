@@ -125,6 +125,10 @@ public class SmtpMessageStore : IMessageStore
                             }
 
                             folder = ruleResult.TargetFolder;
+                            if (!string.IsNullOrEmpty(folder))
+                            {
+                                await mailRepository.CreateFolderAsync(folder, user.Username);
+                            }
 
                             // TODO: Handle Labels, Flags, MarkAsRead
                             // We need to pass these to SaveMessageWithUserStatesAsync or update after saving.

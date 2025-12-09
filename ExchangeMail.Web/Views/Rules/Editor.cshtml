@@ -54,31 +54,31 @@
                 <div class="card-body" id="conditionsContainer">
                     @for (int i = 0; i < Model.Conditions.Count; i++)
                     {
-                        <div class="row g-3 align-items-center mb-2 condition-row">
-                            <input type="hidden" name="Conditions.Index" value="@i" />
-                            <input type="hidden" name="Conditions[@i].Id" value="@Model.Conditions[i].Id" />
-                            <input type="hidden" name="Conditions[@i].RuleId" value="@Model.Conditions[i].RuleId" />
+                            <div class="row g-3 align-items-center mb-2 condition-row">
+                                <input type="hidden" name="Conditions.Index" value="@i" />
+                                <input type="hidden" name="Conditions[@i].Id" value="@Model.Conditions[i].Id" />
+                                <input type="hidden" name="Conditions[@i].RuleId" value="@Model.Conditions[i].RuleId" />
 
-                            <div class="col-auto">If</div>
-                            <div class="col-md-3">
-                                <select name="Conditions[@i].Field" class="form-select" asp-for="@Model.Conditions[i].Field"
+                                <div class="col-auto">If</div>
+                                <div class="col-md-3">
+                                    <select name="Conditions[@i].Field" class="form-select" asp-for="@Model.Conditions[i].Field"
                                 asp-items="Html.GetEnumSelectList<RuleConditionField>()"></select>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="Conditions[@i].Operator" class="form-select"
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="Conditions[@i].Operator" class="form-select"
                                 asp-for="@Model.Conditions[i].Operator"
                                 asp-items="Html.GetEnumSelectList<RuleConditionOperator>()"></select>
-                            </div>
-                            <div class="col-md-4">
-                                <input name="Conditions[@i].Value" class="form-control" value="@Model.Conditions[i].Value"
+                                </div>
+                                <div class="col-md-4">
+                                    <input name="Conditions[@i].Value" class="form-control" value="@Model.Conditions[i].Value"
                                 placeholder="Value to match" />
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
                     }
                 </div>
             </div>
@@ -94,57 +94,45 @@
                 <div class="card-body" id="actionsContainer">
                     @for (int i = 0; i < Model.Actions.Count; i++)
                     {
-                        <div class="row g-3 align-items-center mb-2 action-row">
-                            <input type="hidden" name="Actions.Index" value="@i" />
-                            <input type="hidden" name="Actions[@i].Id" value="@Model.Actions[i].Id" />
-                            <input type="hidden" name="Actions[@i].RuleId" value="@Model.Actions[i].RuleId" />
+                            <div class="row g-3 align-items-center mb-2 action-row">
+                                <input type="hidden" name="Actions.Index" value="@i" />
+                                <input type="hidden" name="Actions[@i].Id" value="@Model.Actions[i].Id" />
+                                <input type="hidden" name="Actions[@i].RuleId" value="@Model.Actions[i].RuleId" />
 
-                            <div class="col-auto">Then</div>
-                            <div class="col-md-4">
-                                <select name="Actions[@i].ActionType" class="form-select action-type-select"
+                                <div class="col-auto">Then</div>
+                                <div class="col-md-4">
+                                    <select name="Actions[@i].ActionType" class="form-select action-type-select"
                                 onchange="handleActionTypeChange(this)" asp-for="@Model.Actions[i].ActionType"
                                 asp-items="Html.GetEnumSelectList<RuleActionType>()"></select>
-                            </div>
-                            <div class="col-md-6">
-                                <!-- Dynamic Input based on Type -->
-                            <div class="target-value-container">
+                                </div>
+                                <div class="col-md-6">
+                                    <!-- Dynamic Input based on Type -->
+                                    <div class="target-value-container">
                                     @if (Model.Actions[i].ActionType == RuleActionType.MoveToFolder)
                                     {
-                                        <select name="Actions[@i].TargetValue" class="form-select">
-                                            @foreach (var folder in folders)
-                                            {
-                                                if (folder == Model.Actions[i].TargetValue)
-                                                {
-                                                    <option value="@folder" selected>@folder</option>
-                                                }
-                                                else
-                                                {
-                                                    <option value="@folder">@folder</option>
-                                                }
-                                            }
-                                        </select>
+                                                    <input name="Actions[@i].TargetValue" class="form-control" list="folderList" value="@Model.Actions[i].TargetValue" placeholder="Select or type folder name" />
                                     }
                                     else if (Model.Actions[i].ActionType == RuleActionType.Delete ||
                                     Model.Actions[i].ActionType == RuleActionType.StopProcessing ||
                                     Model.Actions[i].ActionType == RuleActionType.MarkAsRead || Model.Actions[i].ActionType
                                     == RuleActionType.Flag)
                                     {
-                                        <input type="hidden" name="Actions[@i].TargetValue" value="" />
-                                        <span class="text-muted small fst-italic">No value needed</span>
+                                                    <input type="hidden" name="Actions[@i].TargetValue" value="" />
+                                                    <span class="text-muted small fst-italic">No value needed</span>
                                     }
                                     else
                                     {
-                                        <input name="Actions[@i].TargetValue" class="form-control"
-                                    value="@Model.Actions[i].TargetValue" />
+                                                    <input name="Actions[@i].TargetValue" class="form-control"
+                                        value="@Model.Actions[i].TargetValue" />
                                     }
+                                        </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-auto">
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
                     }
                 </div>
             </div>
@@ -177,7 +165,7 @@
             <select name="Conditions[{index}].Field" class="form-select">
                 @foreach (var item in Html.GetEnumSelectList<RuleConditionField>())
                 {
-                    <option value="@item.Value">@item.Text</option>
+                        <option value="@item.Value">@item.Text</option>
                 }
             </select>
         </div>
@@ -185,7 +173,7 @@
             <select name="Conditions[{index}].Operator" class="form-select">
                 @foreach (var item in Html.GetEnumSelectList<RuleConditionOperator>())
                 {
-                    <option value="@item.Value">@item.Text</option>
+                        <option value="@item.Value">@item.Text</option>
                 }
             </select>
         </div>
@@ -211,19 +199,14 @@
                 onchange="handleActionTypeChange(this)">
                 @foreach (var item in Html.GetEnumSelectList<RuleActionType>())
                 {
-                    <option value="@item.Value">@item.Text</option>
+                        <option value="@item.Value">@item.Text</option>
                 }
             </select>
         </div>
         <div class="col-md-6">
             <div class="target-value-container">
-                <!-- Default to Folder Select as MoveToFolder is typically 0 -->
-                <select name="Actions[{index}].TargetValue" class="form-select">
-                    @foreach (var folder in folders)
-                    {
-                        <option value="@folder">@folder</option>
-                    }
-                </select>
+                <!-- Data List for auto-complete -->
+                <input name="Actions[{index}].TargetValue" class="form-control" list="folderList" placeholder="Select or type folder name" />
             </div>
         </div>
         <div class="col-auto">
@@ -235,12 +218,12 @@
 </template>
 
 <!-- Hidden folder options for JS to use -->
-<div id="folderOptions" style="display:none;">
+<datalist id="folderList">
     @foreach (var folder in folders)
     {
-        <option value="@folder">@folder</option>
+            <option value="@folder">@folder</option>
     }
-</div>
+</datalist>
 
 <script>
     function addCondition() {
@@ -273,8 +256,7 @@
 
         // Checking against enum text or value. MoveToFolder is typically 0
         if (actionType === 'MoveToFolder' || actionValue == '0') {
-            const folderOpts = document.getElementById('folderOptions').innerHTML;
-            html = `<select name="${nameAttr}" class="form-select">${folderOpts}</select>`;
+            html = `<input name="${nameAttr}" class="form-control" list="folderList" placeholder="Select or type folder name" />`;
         } else if (actionType === 'Delete' || actionType === 'StopProcessing' || actionType === 'MarkAsRead' || actionType === 'Flag') {
             html = `<input type="hidden" name="${nameAttr}" value="" /><span class="text-muted small fst-italic">No value needed</span>`;
         } else {
