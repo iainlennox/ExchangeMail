@@ -18,6 +18,15 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Cookie Authentication
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Mail/Login";
+        options.LogoutPath = "/Mail/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Default, overridden by IsPersistent
+    });
+
 // Data Protection (Persist keys to local folder to avoid IIS profile permission issues)
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")));
@@ -105,6 +114,9 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
 
+app.UseSession();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

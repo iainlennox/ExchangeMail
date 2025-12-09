@@ -49,12 +49,18 @@ public class MailControllerTests
             new Mock<IAiEmailService>().Object
         );
 
-        var session = new Mock<ISession>();
-        var usernameBytes = System.Text.Encoding.UTF8.GetBytes("testuser");
-        session.Setup(s => s.TryGetValue("Username", out usernameBytes)).Returns(true);
+        var claims = new List<System.Security.Claims.Claim>
+        {
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "testuser"),
+            new System.Security.Claims.Claim("Username", "testuser"),
+            new System.Security.Claims.Claim("IsAdmin", "False")
+        };
+        var identity = new System.Security.Claims.ClaimsIdentity(claims, "TestAuthType");
+        var user = new System.Security.Claims.ClaimsPrincipal(identity);
 
         var httpContext = new DefaultHttpContext();
-        httpContext.Session = session.Object;
+        httpContext.User = user;
+
         _controller.ControllerContext = new ControllerContext()
         {
             HttpContext = httpContext
