@@ -1,5 +1,8 @@
 using ExchangeMail.Core.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 using MimeKit;
 using MailKit.Net.Smtp;
 using HtmlAgilityPack;
@@ -38,8 +41,8 @@ public class MailController : Controller
         _aiEmailService = aiEmailService;
     }
 
-    private string? GetCurrentUser() => HttpContext.Session.GetString("Username");
-    private bool IsAdmin() => HttpContext.Session.GetString("IsAdmin") == "True";
+    private string? GetCurrentUser() => User.Identity?.Name;
+    private bool IsAdmin() => User.FindFirst("IsAdmin")?.Value == "True";
 
     private async Task<string> GetUserEmailAsync()
     {
@@ -59,13 +62,34 @@ public class MailController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string username, string password)
+    public async Task<IActionResult> Login(string username, string password, bool rememberMe)
     {
         var user = await _userRepository.ValidateUserAsync(username, password);
         if (user != null)
         {
-            HttpContext.Session.SetString("Username", user.Username);
-            HttpContext.Session.SetString("IsAdmin", user.IsAdmin.ToString());
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim("Username", user.Username),
+                new Claim("IsAdmin", user.IsAdmin.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = rememberMe
+            };
+
+            if (rememberMe)
+            {
+                authProperties.ExpiresUtc = DateTime.UtcNow.AddDays(30);
+            }
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
             return RedirectToAction("Index");
         }
         ModelState.AddModelError("", "Invalid username or password");
@@ -95,9 +119,9 @@ public class MailController : Controller
         return RedirectToAction("ImportProgress", new { jobId = jobId });
     }
 
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
-        HttpContext.Session.Clear();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login");
     }
 
