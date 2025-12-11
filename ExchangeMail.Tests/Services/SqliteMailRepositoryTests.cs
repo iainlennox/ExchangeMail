@@ -81,6 +81,50 @@ public class SqliteMailRepositoryTests
     }
 
     [Fact]
+    public async Task GetMessagesAsync_SortsByDateDesc_ByDefault()
+    {
+        // Arrange
+        var userEmail = "user@example.com";
+        await AddMessageAsync("1", "a@test.com", userEmail, "Subj 1");
+        await AddMessageAsync("2", "b@test.com", userEmail, "Subj 2");
+
+        // Manipulate dates
+        var msg1 = await _context.Messages.FindAsync("1");
+        msg1.Date = DateTime.UtcNow.AddHours(-1);
+
+        var msg2 = await _context.Messages.FindAsync("2");
+        msg2.Date = DateTime.UtcNow; // Newer
+
+        await _context.SaveChangesAsync();
+
+        // Act
+        var (messages, count) = await _repository.GetMessagesAsync(userEmail, "", 1, 10, "Inbox", null, "Date", "All", true);
+
+        // Assert
+        Assert.Equal(2, count);
+        Assert.Equal("Subj 2", messages.First().Subject);
+    }
+
+    [Fact]
+    public async Task GetMessagesAsync_FiltersUnread()
+    {
+        // Arrange
+        var userEmail = "user@example.com";
+        await AddMessageAsync("1", "a@test.com", userEmail, "Subj 1"); // Unread by default
+
+        var msg2Id = "2";
+        await AddMessageAsync(msg2Id, "b@test.com", userEmail, "Subj 2");
+        await _repository.MarkAsReadAsync(msg2Id, userEmail);
+
+        // Act
+        var (messages, count) = await _repository.GetMessagesAsync(userEmail, "", 1, 10, "Inbox", null, "Date", "Unread", true);
+
+        // Assert
+        Assert.Single(messages);
+        Assert.Equal("Subj 1", messages.First().Subject);
+    }
+
+    [Fact]
     public async Task MarkAsReadAsync_UpdatesIsReadFlag()
     {
         // Arrange
@@ -262,7 +306,8 @@ public class SqliteMailRepositoryTests
             Subject = subject,
             Date = DateTime.UtcNow,
             RawContent = stream.ToArray(),
-            IsImported = false
+            IsImported = false,
+            ThreadId = id // Treat each message as its own thread for these tests
         });
 
         _context.UserMessages.Add(new UserMessageEntity

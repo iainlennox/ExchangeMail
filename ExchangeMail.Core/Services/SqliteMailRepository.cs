@@ -178,7 +178,7 @@ public class SqliteMailRepository : IMailRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox", bool? isFocused = null)
+    public async Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox", bool? isFocused = null, string sort = "Date", string filter = "All", bool sortDesc = true)
     {
         var query = from um in _context.UserMessages
                     join m in _context.Messages on um.MessageId equals m.Id
@@ -210,23 +210,84 @@ public class SqliteMailRepository : IMailRepository
             query = query.Where(x => !x.um.IsDeleted && x.um.Folder == folder);
         }
 
-        // Calculate Total Threads Count
-        // Standard CountAsync on GroupBy can be tricky in some EF Core versions depending on provider.
-        // But let's try direct approach.
-        var groupedQuery = query.GroupBy(x => x.m.ThreadId);
-        var totalCount = await groupedQuery.CountAsync();
+        // Apply filters
+        if (filter.Equals("Unread", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(x => !x.um.IsRead);
+        }
+        else if (filter.Equals("Urgent", StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(x => x.um.Labels.Contains("Urgent"));
+        }
 
-        // Get Paged Groups
-        var threadInfos = await groupedQuery
+        // Apply Sorting
+        // Apply Sorting
+        if (sort.Equals("From", StringComparison.OrdinalIgnoreCase))
+        {
+            query = sortDesc ? query.OrderByDescending(x => x.m.From) : query.OrderBy(x => x.m.From);
+        }
+        else if (sort.Equals("Subject", StringComparison.OrdinalIgnoreCase))
+        {
+            query = sortDesc ? query.OrderByDescending(x => x.m.Subject) : query.OrderBy(x => x.m.Subject);
+        }
+        else // Date
+        {
+            query = sortDesc ? query.OrderByDescending(x => x.m.Date) : query.OrderBy(x => x.m.Date);
+        }
+
+        // Calculate Total
+        // When sorting by non-date fields, threading logic gets complicated.
+        // For this iteration, if sorting by Subject or From, we might disable threading or list individual messages.
+        // However, the prompt implies "sort and filter email in the inbox", and maintaining threaded view with non-date sort is tricky.
+        // Let's assume for Date sort we keep threading, but for others we might need to be careful.
+        // BUT, looking at the code, threading is done by grouping by ThreadId.
+
+        // If we sort by FROM, we should probably sort the THREADS by the latest message from that sender? 
+        // Or simply disable threading for non-date sorts for simplicity and correctness?
+        // Modern email clients often switch to flat view or group differently.
+
+        // Let's stick to the existing Thread grouping logic but adjust the ordering of the GROUPS.
+        // This is complex in LINQ.
+
+        // SIMPLIFICATION: If sort is NOT Date, we will fallback to message-level list (disable threading view effectively) OR
+        // we try to carry over the sort to the group.
+
+        // Let's try to keep it compatible with existing return type.
+
+        var groupedQuery = query.GroupBy(x => x.m.ThreadId);
+
+        // However, if we order BEFORE grouping, the group key order isn't guaranteed in all providers.
+        // We need to order the GROUPS.
+
+        var threadGroups = query.GroupBy(x => x.m.ThreadId)
             .Select(g => new
             {
                 ThreadId = g.Key,
                 LatestDate = g.Max(x => x.m.Date),
                 LatestMessageId = g.OrderByDescending(x => x.m.Date).Select(x => x.m.Id).FirstOrDefault(),
+                Subject = g.OrderByDescending(x => x.m.Date).Select(x => x.m.Subject).FirstOrDefault(),
+                From = g.OrderByDescending(x => x.m.Date).Select(x => x.m.From).FirstOrDefault(),
                 Count = g.Count(),
                 IsRead = g.All(x => x.um.IsRead)
-            })
-            .OrderByDescending(x => x.LatestDate)
+            });
+
+        // Apply Sort to Groups
+        if (sort.Equals("From", StringComparison.OrdinalIgnoreCase))
+        {
+            threadGroups = sortDesc ? threadGroups.OrderByDescending(x => x.From) : threadGroups.OrderBy(x => x.From);
+        }
+        else if (sort.Equals("Subject", StringComparison.OrdinalIgnoreCase))
+        {
+            threadGroups = sortDesc ? threadGroups.OrderByDescending(x => x.Subject) : threadGroups.OrderBy(x => x.Subject);
+        }
+        else // Date
+        {
+            threadGroups = sortDesc ? threadGroups.OrderByDescending(x => x.LatestDate) : threadGroups.OrderBy(x => x.LatestDate);
+        }
+
+        var totalCount = await threadGroups.CountAsync();
+
+        var threadInfos = await threadGroups
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -236,7 +297,7 @@ public class SqliteMailRepository : IMailRepository
         var detailsMap = await (from um in _context.UserMessages
                                 join m in _context.Messages on um.MessageId equals m.Id
                                 where latestIds.Contains(m.Id) && um.UserId == userEmail
-                                select new { m, um }) // Adding um.UserId check to be safe though ID checks imply it
+                                select new { m, um })
                                 .ToDictionaryAsync(x => x.m.Id, x => x);
 
         var messages = new List<MimeMessage>();
@@ -251,12 +312,10 @@ public class SqliteMailRepository : IMailRepository
                 message.Headers.Add("X-Thread-Id", info.ThreadId ?? "");
                 message.Headers.Add("X-Thread-Count", info.Count.ToString());
 
-                // Thread Read Status overrides individual message read status for the list view
                 if (info.IsRead)
                 {
                     message.Headers.Add("X-Is-Read", "true");
                 }
-                // Else treat as unread (default) if any validation fails
 
                 if (!string.IsNullOrEmpty(detail.um.Labels))
                 {

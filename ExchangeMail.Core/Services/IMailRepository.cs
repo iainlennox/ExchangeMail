@@ -6,7 +6,7 @@ public interface IMailRepository
 {
     Task SaveMessageAsync(MimeMessage message, string? folderName = null, string? owner = null, bool isImported = false);
     Task SaveMessageWithUserStatesAsync(MimeMessage message, IEnumerable<(string UserEmail, string? Folder, string? Labels)> userStates);
-    Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox", bool? isFocused = null);
+    Task<(IEnumerable<MimeMessage> Messages, int TotalCount)> GetMessagesAsync(string userEmail, string searchString, int page, int pageSize, string folder = "Inbox", bool? isFocused = null, string sort = "Date", string filter = "All", bool sortDesc = true);
     Task<MimeMessage?> GetMessageAsync(string id, string userEmail);
     Task DeleteMessageAsync(string id, string userEmail);
     Task PermanentDeleteMessageAsync(string id, string userEmail);
