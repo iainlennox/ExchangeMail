@@ -46,8 +46,14 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 
 ## Screenshots
 
+### Login Screen
+![Login Screen Placeholder](DOCS/Images/LoginScreenPlaceholder.png)
+
 ### Inbox View
 <img width="1595" height="994" alt="image" src="https://github.com/user-attachments/assets/3482e10d-7f8b-4012-89dc-4698514c80ea" />
+
+### Today's Outlook
+![Today's Outlook Placeholder](DOCS/Images/TodaysOutlookPlaceholder.png)
 
 
 ### Compose Email
