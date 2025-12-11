@@ -35,7 +35,7 @@
                 if (threadCount < 2) threadCount = 0; // Treat single as non-thread
 
                 <div class="thread-wrapper">
-                    <div class="mail-list-item @(isRead ? "" : "unread")" data-id="@dbId" draggable="true"
+                    <div class="mail-list-item @(isRead ? "" : "unread")" data-id="@dbId" data-focused="@message.Headers["X-Is-Focused"]" draggable="true"
                 ondragstart="drag(event)" onclick="loadMessage('@dbId', this)">
                         <div class="d-flex justify-content-between align-items-baseline">
                             <span class="sender text-truncate" style="max-width: 70%;">

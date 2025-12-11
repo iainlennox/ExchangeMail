@@ -25,5 +25,6 @@ public interface IMailRepository
     Task UpdateMessageAsync(string id, MimeMessage message);
     Task<Dictionary<string, int>> GetUnreadCountsAsync(string userEmail);
     Task<IEnumerable<MimeMessage>> GetThreadMessagesAsync(string threadId, string userEmail);
+    Task SetMessageFocusedAsync(string messageId, string userEmail, bool isFocused);
     Task RepairThreadsAsync();
 }

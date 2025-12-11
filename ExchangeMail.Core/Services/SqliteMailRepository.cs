@@ -615,6 +615,16 @@ public class SqliteMailRepository : IMailRepository
 
         return unreadCounts;
     }
+    public async Task SetMessageFocusedAsync(string messageId, string userEmail, bool isFocused)
+    {
+        var userMessage = await _context.UserMessages.FirstOrDefaultAsync(um => um.MessageId == messageId && um.UserId == userEmail);
+        if (userMessage != null)
+        {
+            userMessage.IsFocused = isFocused;
+            await _context.SaveChangesAsync();
+        }
+    }
+
     public async Task<IEnumerable<MimeMessage>> GetThreadMessagesAsync(string threadId, string userEmail)
     {
         var messages = new List<MimeMessage>();
