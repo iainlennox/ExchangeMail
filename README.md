@@ -50,17 +50,20 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 <img width="1710" height="1004" alt="image" src="https://github.com/user-attachments/assets/d7b6c790-0e32-4e80-bc17-6afe26a91215" />
 
 ### Inbox View
-<img width="1595" height="994" alt="image" src="https://github.com/user-attachments/assets/3482e10d-7f8b-4012-89dc-4698514c80ea" />
+<img width="1718" height="962" alt="image" src="https://github.com/user-attachments/assets/bd7e7b23-fe57-4bba-a6a7-f6147aaf8845" />
 
 ### Today's Outlook
 <img width="1711" height="1002" alt="image" src="https://github.com/user-attachments/assets/c8bf6156-eeff-4deb-9a7e-fef6c707a32e" />
 
 ### Compose Email
-<img width="1601" height="1002" alt="image" src="https://github.com/user-attachments/assets/b765d7b4-aaad-4039-a72f-6f14b7a73496" />
+<img width="1716" height="999" alt="image" src="https://github.com/user-attachments/assets/b466c92a-72dd-4b89-b08b-b2fad5070def" />
 
+### Settings
+<img width="1719" height="1006" alt="image" src="https://github.com/user-attachments/assets/3e1604fa-cc3b-452a-937f-40bbf1c06d18" />
 
-### Settings & Rules
-<img width="1603" height="997" alt="image" src="https://github.com/user-attachments/assets/244cfa1e-20f9-4b6a-9e12-dcda56dea2d5" />
+### Rules
+<img width="1715" height="1004" alt="image" src="https://github.com/user-attachments/assets/a68ff926-9947-43b3-89e5-8c52b586dd09" />
+
 
 
 ## Tech Stack
