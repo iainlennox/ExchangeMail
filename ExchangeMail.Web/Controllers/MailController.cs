@@ -125,7 +125,7 @@ public class MailController : Controller
         return RedirectToAction("Login");
     }
 
-    public async Task<IActionResult> Index(string searchString, int page = 1, string folder = "Inbox", bool? focused = null)
+    public async Task<IActionResult> Index(string searchString, int page = 1, string folder = "Inbox", bool? focused = null, string sort = "Date", string filter = "All", bool sortDesc = true)
     {
         var username = GetCurrentUser();
         if (username == null) return RedirectToAction("Login");
@@ -136,7 +136,7 @@ public class MailController : Controller
         // Default to Focused if in Inbox and no preference specified
         if (folder == "Inbox" && focused == null) focused = true;
 
-        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused);
+        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused, sort, filter, sortDesc);
         var folders = await _mailRepository.GetFoldersAsync(userEmail);
         var unreadCounts = await _mailRepository.GetUnreadCountsAsync(userEmail);
 
@@ -150,6 +150,11 @@ public class MailController : Controller
         ViewBag.Folders = folders;
         ViewBag.FolderUnreadCounts = unreadCounts;
 
+        // Pass Sort/Filter to View
+        ViewBag.Sort = sort;
+        ViewBag.Filter = filter;
+        ViewBag.SortDesc = sortDesc;
+
         return View(messages);
     }
 
@@ -161,8 +166,6 @@ public class MailController : Controller
 
         var userEmail = await GetUserEmailAsync();
         var summary = await _mailRepository.GetLatestMessageSummaryAsync(userEmail, folder);
-
-        if (summary == null) return Json(new { id = (string?)null });
 
         if (summary == null) return Json(new { id = (string?)null });
 
@@ -265,7 +268,7 @@ public class MailController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> MessageList(string searchString, int page = 1, string folder = "Inbox", bool? focused = null)
+    public async Task<IActionResult> MessageList(string searchString, int page = 1, string folder = "Inbox", bool? focused = null, string sort = "Date", string filter = "All", bool sortDesc = true)
     {
         var username = GetCurrentUser();
         if (username == null) return Unauthorized();
@@ -276,7 +279,7 @@ public class MailController : Controller
         // Default to Focused if in Inbox and no preference specified
         if (folder == "Inbox" && focused == null) focused = true;
 
-        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused);
+        var (messages, totalCount) = await _mailRepository.GetMessagesAsync(userEmail, searchString, page, pageSize, folder, focused, sort, filter, sortDesc);
         var unreadCounts = await _mailRepository.GetUnreadCountsAsync(userEmail);
 
         ViewBag.UserEmail = userEmail;
@@ -287,6 +290,10 @@ public class MailController : Controller
         ViewBag.Folder = folder;
         ViewBag.Focused = focused;
         ViewBag.FolderUnreadCounts = unreadCounts;
+
+        ViewBag.Sort = sort;
+        ViewBag.Filter = filter;
+        ViewBag.SortDesc = sortDesc;
 
         return PartialView("_MessageList", messages);
     }
