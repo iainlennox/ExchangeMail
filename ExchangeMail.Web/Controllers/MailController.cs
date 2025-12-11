@@ -217,6 +217,17 @@ public class MailController : Controller
     }
 
     [HttpPost]
+    public async Task<IActionResult> MoveToFocused(string id, bool focused)
+    {
+        if (GetCurrentUser() == null) return Unauthorized();
+        var userEmail = await GetUserEmailAsync();
+
+        await _mailRepository.SetMessageFocusedAsync(id, userEmail, focused);
+
+        return Ok();
+    }
+
+    [HttpPost]
     public async Task<IActionResult> Summarize(string id)
     {
         var username = GetCurrentUser();

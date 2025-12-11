@@ -222,13 +222,14 @@
             '<a class="dropdown-item" href="#" id="ctx-reply"><i class="bi bi-reply me-2"></i>Reply</a>' +
             '<a class="dropdown-item" href="#" id="ctx-reply-all"><i class="bi bi-reply-all me-2"></i>Reply all</a>' +
             '<a class="dropdown-item" href="#" id="ctx-forward"><i class="bi bi-forward me-2"></i>Forward</a>' +
-            '<a class="dropdown-item" href="#" id="ctx-reply-all"><i class="bi bi-reply-all me-2"></i>Reply all</a>' +
-            '<a class="dropdown-item" href="#" id="ctx-forward"><i class="bi bi-forward me-2"></i>Forward</a>' +
             '<div class="dropdown-divider"></div>' +
             '<a class="dropdown-item" href="#" id="ctx-mark-read"><i class="bi bi-envelope-open me-2"></i>Mark as Read</a>' +
             '<a class="dropdown-item" href="#" id="ctx-mark-unread"><i class="bi bi-envelope me-2"></i>Mark as Unread</a>' +
             '<div class="dropdown-divider"></div>' +
             '<a class="dropdown-item" href="#" id="ctx-delete"><i class="bi bi-trash me-2"></i>Delete</a>' +
+            '<div class="dropdown-divider"></div>' +
+            '<a class="dropdown-item" href="#" id="ctx-move-focused" style="display:none;"><i class="bi bi-bullseye me-2"></i>Move to Focused</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-move-other" style="display:none;"><i class="bi bi-archive me-2"></i>Move to Other</a>' +
             '<div class="dropdown-divider"></div>' +
             '<h6 class="dropdown-header">Move/Copy</h6>' +
             '<a class="dropdown-item" href="#" id="ctx-move">Move to...</a>' +
@@ -243,6 +244,18 @@
         $(document).on('contextmenu', '.mail-list-item', function (e) {
             e.preventDefault();
             selectedMessageId = $(this).data('id');
+            
+            var isFocusedHeader = $(this).attr('data-focused');
+            var isFocused = isFocusedHeader === 'True';
+
+            if (isFocused) {
+                 $('#ctx-move-other').show();
+                 $('#ctx-move-focused').hide();
+            } else {
+                 $('#ctx-move-other').hide();
+                 $('#ctx-move-focused').show();
+            }
+
             // Populate folders
             var folders = [];
             $('.list-group-item').each(function () {
@@ -358,6 +371,34 @@
             e.preventDefault();
             contextMenu.hide();
             if (selectedMessageId) deleteMessage(selectedMessageId);
+        });
+
+        $('#ctx-move-focused').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) {
+                $.post('@Url.Action("MoveToFocused", "Mail")', { id: selectedMessageId, focused: true })
+                    .done(function () {
+                        location.reload();
+                    })
+                    .fail(function () {
+                        showModalAlert('Failed to move to Focused.');
+                    });
+            }
+        });
+
+        $('#ctx-move-other').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) {
+                $.post('@Url.Action("MoveToFocused", "Mail")', { id: selectedMessageId, focused: false })
+                    .done(function () {
+                        location.reload();
+                    })
+                    .fail(function () {
+                        showModalAlert('Failed to move to Other.');
+                    });
+            }
         });
 
         // Handle Move/Copy Actions
