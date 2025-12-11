@@ -21,11 +21,10 @@ public class AdminControllerTests
     private readonly Mock<ICalendarRepository> _mockCalendarRepository;
     private readonly Mock<IMailRuleService> _mockMailRuleService;
     private readonly AdminController _controller;
-    private readonly Mock<ISession> _mockSession;
+
     private readonly Mock<HttpContext> _mockHttpContext;
 
-    private readonly Mock<IServiceProvider> _mockServiceProvider;
-    private readonly Mock<IConfiguration> _mockConfig;
+
 
     public AdminControllerTests()
     {
@@ -45,10 +44,7 @@ public class AdminControllerTests
             _mockCalendarRepository.Object,
             _mockMailRuleService.Object);
 
-        _mockSession = new Mock<ISession>();
         _mockHttpContext = new Mock<HttpContext>();
-        _mockHttpContext.Setup(s => s.Session).Returns(_mockSession.Object);
-
 
         _controller.ControllerContext = new ControllerContext
         {
@@ -58,8 +54,21 @@ public class AdminControllerTests
 
     private void SetupAdminSession(bool isAdmin)
     {
-        byte[] value = isAdmin ? Encoding.UTF8.GetBytes("True") : null;
-        _mockSession.Setup(s => s.TryGetValue("IsAdmin", out value)).Returns(isAdmin);
+        if (isAdmin)
+        {
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "admin"),
+                new System.Security.Claims.Claim("IsAdmin", "True")
+            };
+            var identity = new System.Security.Claims.ClaimsIdentity(claims, "TestAuthType");
+            var user = new System.Security.Claims.ClaimsPrincipal(identity);
+            _mockHttpContext.Setup(c => c.User).Returns(user);
+        }
+        else
+        {
+            _mockHttpContext.Setup(c => c.User).Returns(new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity()));
+        }
     }
 
     [Fact]

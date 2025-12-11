@@ -7,8 +7,9 @@
     var statusTitle = isOnline ? "Server Online" : "Server Offline";
     var lastSeen = heartbeat.HasValue ? $"Last seen: {heartbeat.Value.ToLocalTime():HH:mm:ss}" : "Never seen";
 
-    var username = Context.Session.GetString("Username");
+    var username = User.Identity?.Name;
     var enableAnimations = false;
+    var aiEnabled = await ConfigurationService.GetSummarizationEnabledAsync(); // Added
     if (!string.IsNullOrEmpty(username))
     {
         using (var scope = Context.RequestServices.CreateScope())
@@ -47,12 +48,25 @@
             </div>
 
             <!-- Centered Button -->
-            <div class="d-none d-md-block" style="position: absolute; left: 50%; transform: translateX(-50%);">
-                <button onclick="showOutlookModal()" class="btn btn-outline-primary btn-sm rounded-pill shadow-sm px-3"
+            @if (!string.IsNullOrEmpty(username))
+            {
+                <div class="d-none d-md-block" style="position: absolute; left: 50%; transform: translateX(-50%);">
+                    @if (aiEnabled)
+                    {
+                        <button onclick="showOutlookModal()" class="btn btn-outline-primary btn-sm rounded-pill shadow-sm px-3"
                     title="Today's Outlook">
-                    <i class="bi bi-stars me-2"></i> Today's Outlook
-                </button>
-            </div>
+                            <i class="bi bi-stars me-2"></i> Today's Outlook
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm px-3" disabled
+                    title="AI features are disabled">
+                            <i class="bi bi-stars me-2"></i> Today's Outlook
+                        </button>
+                    }
+                </div>
+            }
 
             <div class="d-flex align-items-center">
                 <div class="me-3" title="@statusTitle - @lastSeen" data-bs-toggle="tooltip" data-bs-placement="bottom">
@@ -70,7 +84,7 @@
                         <i class="bi bi-person-circle fs-5"></i>
                     </a>
                     <ul class="dropdown-menu text-small shadow" style="">
-                        <li><span class="dropdown-item-text fw-bold">@Context.Session.GetString("Username")</span></li>
+                        <li><span class="dropdown-item-text fw-bold">@username</span></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>

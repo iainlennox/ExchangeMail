@@ -14,7 +14,7 @@ public class ContactsControllerTests
 {
     private readonly ExchangeMailContext _context;
     private readonly ContactsController _controller;
-    private readonly Mock<ISession> _mockSession;
+
     private readonly Mock<HttpContext> _mockHttpContext;
 
     public ContactsControllerTests()
@@ -26,9 +26,9 @@ public class ContactsControllerTests
 
         _controller = new ContactsController(_context);
 
-        _mockSession = new Mock<ISession>();
         _mockHttpContext = new Mock<HttpContext>();
-        _mockHttpContext.Setup(s => s.Session).Returns(_mockSession.Object);
+        var defaultUser = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity());
+        _mockHttpContext.Setup(c => c.User).Returns(defaultUser);
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = _mockHttpContext.Object
@@ -37,8 +37,13 @@ public class ContactsControllerTests
 
     private void SetupUserSession(string username)
     {
-        byte[] value = Encoding.UTF8.GetBytes(username);
-        _mockSession.Setup(s => s.TryGetValue("Username", out value)).Returns(true);
+        var claims = new List<System.Security.Claims.Claim>
+        {
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, username)
+        };
+        var identity = new System.Security.Claims.ClaimsIdentity(claims, "TestAuthType");
+        var user = new System.Security.Claims.ClaimsPrincipal(identity);
+        _mockHttpContext.Setup(c => c.User).Returns(user);
     }
 
     [Fact]

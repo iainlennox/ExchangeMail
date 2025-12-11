@@ -64,6 +64,7 @@ public class SqliteUserRepositoryTests
 
         // Assert
         var entity = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
         Assert.NotNull(entity);
         Assert.NotEqual(password, entity.Password);
         Assert.StartsWith("$2", entity.Password);
