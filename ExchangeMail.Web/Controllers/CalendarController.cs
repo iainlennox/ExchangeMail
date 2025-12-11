@@ -15,7 +15,7 @@ public class CalendarController : Controller
         _configurationService = configurationService;
     }
 
-    private string? GetCurrentUser() => HttpContext.Session.GetString("Username");
+    private string? GetCurrentUser() => User.Identity?.Name;
 
     private async Task<string> GetUserEmailAsync()
     {

@@ -12,7 +12,7 @@ public class SettingsController : Controller
         _userRepository = userRepository;
     }
 
-    private string? GetCurrentUser() => HttpContext.Session.GetString("Username");
+    private string? GetCurrentUser() => User.Identity?.Name;
 
     public async Task<IActionResult> Index()
     {

@@ -30,7 +30,7 @@ public class AdminController : Controller
 
     private bool IsAdmin()
     {
-        return HttpContext.Session.GetString("IsAdmin") == "True";
+        return User.Claims.Any(c => c.Type == "IsAdmin" && c.Value == "True");
     }
 
     public async Task<IActionResult> Index()
@@ -498,7 +498,8 @@ public class AdminController : Controller
         await dbContext.Database.ExecuteSqlRawAsync("VACUUM");
 
         // Clear session
-        HttpContext.Session.Clear();
+        // Clear authentication
+        await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignOutAsync(HttpContext, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
 
         return RedirectToAction("Index", "Setup");
     }

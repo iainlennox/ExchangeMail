@@ -19,7 +19,7 @@ public class RulesController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var userEmail = HttpContext.Session.GetString("Username");
+        var userEmail = User.Identity?.Name;
         if (string.IsNullOrEmpty(userEmail)) return RedirectToAction("Login", "Mail");
 
         var rules = await _ruleRepository.GetRulesAsync(userEmail);
@@ -37,7 +37,7 @@ public class RulesController : Controller
     [HttpGet]
     public async Task<IActionResult> Editor(int? id)
     {
-        var userEmail = HttpContext.Session.GetString("Username");
+        var userEmail = User.Identity?.Name;
         if (string.IsNullOrEmpty(userEmail)) return RedirectToAction("Login", "Mail");
 
         // Populate folders for dropdowns
@@ -67,7 +67,7 @@ public class RulesController : Controller
     [HttpPost]
     public async Task<IActionResult> Save(MailRuleEntity rule)
     {
-        var userEmail = HttpContext.Session.GetString("Username");
+        var userEmail = User.Identity?.Name;
         if (string.IsNullOrEmpty(userEmail)) return RedirectToAction("Login", "Mail");
 
         rule.UserEmail = userEmail;

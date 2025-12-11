@@ -110,8 +110,20 @@ public class SetupController : Controller
             await _mailRepository.SaveMessageWithUserStatesAsync(welcomeEmail, welcomeParams);
 
             // Auto-login
-            HttpContext.Session.SetString("Username", username);
-            HttpContext.Session.SetString("IsAdmin", "True");
+            var claims = new System.Collections.Generic.List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, username),
+                new System.Security.Claims.Claim("Username", username),
+                new System.Security.Claims.Claim("IsAdmin", "True")
+            };
+
+            var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+            {
+                IsPersistent = true
+            };
+
+            await Microsoft.AspNetCore.Authentication.AuthenticationHttpContextExtensions.SignInAsync(HttpContext, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme, new System.Security.Claims.ClaimsPrincipal(claimsIdentity), authProperties);
 
             return RedirectToAction("Complete");
         }
