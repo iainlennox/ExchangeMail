@@ -32,11 +32,17 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 ### 👥 Contacts
 -   **Contact Management**: Store and manage your personal address book.
 
+### ⚙️ User Experience & Customization
+-   **Smart Inbox Management**:
+    -   **Sorting & Filtering**: Sort emails by Date, Sender, or Subject, and filter by Unread or Urgent status using the new intuitive toolbar.
+    -   **Focused Inbox**: Automatically separates important emails from bulk/other messages using a "Focused" and "Other" tab system.
+    -   **Dark Mode**: Fully supported dark mode theme that respects system settings and user preference.
+
 ### 🤖 AI Features
--   **Smart Daily Briefing**: Get a dynamic "Today's Outlook" with a personalized greeting and summary of your day's events and tasks.
--   **Email Summarization**: One-click AI summarization of long email threads, automatically extracting action items.
--   **Smart Labels**: Automatically categorizes emails (Work, Personal, Urgent, etc.) and detects potential security threats.
--   **AI Drafting**: comprehensive AI assistance for drafting professional email replies.
+-   **Today's Outlook**: Get a daily briefing with a summary of your schedule and important unread emails, including weather updates.
+-   **Email Summarization**: Quickly grasp the content of long emails with AI-generated summaries.
+-   **Auto-Labeling**: Intelligent tagging of emails based on content (Work, Personal, Urgent, etc.) and detection of potential security threats.
+-   **AI Drafting**: Comprehensive AI assistance for drafting professional email replies.
 
 ## Screenshots
 
