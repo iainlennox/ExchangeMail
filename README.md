@@ -34,6 +34,14 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 ### 👥 Contacts
 -   **Contact Management**: Store and manage your personal address book.
 
+### ✅ Task Management
+-   **Advanced Organization**: 
+    -   **Filters**: Easily view tasks by status (Active, Waiting, Blocked, Completed) or origin.
+    -   **Email Integration**: Create tasks directly from emails. These tasks link back to the original email for easy context retrieval.
+    -   **Sorting**: Flexible sorting options by priority, due date, or creation time.
+-   **Mobile-Friendly**: Collapsible sidebar navigation optimized for mobile devices.
+-   **Status Tracking**: Track tasks not just as "done" but also "Waiting" or "Blocked" to better manage dependencies.
+
 ### ⚙️ User Experience & Customization
 -   **Smart Inbox Management**:
     -   **Sorting & Filtering**: Sort emails by Date, Sender, or Subject, and filter by Unread or Urgent status using the new intuitive toolbar.
