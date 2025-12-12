@@ -358,3 +358,63 @@ $(document).on('click', '.thread-expander', function (e) {
         icon.classList.add('bi-chevron-down');
     }
 });
+
+// Pull to Refresh Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('messageListContainer');
+    const indicator = document.getElementById('ptr-indicator');
+
+    if (!container || !indicator) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    const threshold = 80;
+
+    container.addEventListener('touchstart', (e) => {
+        if (container.scrollTop === 0) {
+            startY = e.touches[0].clientY;
+            isDragging = true;
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+
+        currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+
+        // Only handle pull down when at top
+        if (diff > 0 && container.scrollTop === 0) {
+            // Visualize stretch (dampened)
+            if (diff < threshold * 2) {
+                indicator.style.height = `${Math.min(diff / 2, 60)}px`;
+                indicator.style.opacity = `${Math.min(diff / threshold, 1)}`;
+            }
+        } else {
+            isDragging = false;
+            indicator.style.height = '0px';
+            indicator.style.opacity = '0';
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+
+        const diff = currentY - startY;
+        if (diff > threshold && container.scrollTop === 0) {
+            // Trigger Refresh
+            indicator.style.height = '60px'; // Lock open
+            indicator.style.opacity = '1';
+
+            location.reload();
+        } else {
+            // Reset
+            indicator.style.height = '0px';
+            indicator.style.opacity = '0';
+        }
+        isDragging = false;
+        startY = 0;
+        currentY = 0;
+    });
+});

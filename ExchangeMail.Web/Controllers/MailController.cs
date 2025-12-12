@@ -528,7 +528,7 @@ public class MailController : Controller
             return Redirect(returnUrl);
         }
 
-        return RedirectToAction("Index");
+        return Ok();
     }
 
     public async Task<IActionResult> Delete(string id)

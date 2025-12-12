@@ -614,6 +614,36 @@
     }
 
     function applyMessageDarkMode(iframe) {
+        // Ensure swipe works in iframe
+        enableFrameSwipe(iframe);
+
+        // Collapsible Header Logic (Mobile)
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            var win = iframe.contentWindow;
+            var lastScrollTop = 0;
+            var header = document.getElementById('readingPaneHeader');
+
+            if (doc && header) {
+                win.addEventListener('scroll', function() {
+                    if (window.innerWidth > 768) return; // Mobile only
+
+                    var scrollTop = win.pageYOffset || doc.documentElement.scrollTop;
+                    var threshold = 50; // Minimum scroll to trigger collapse
+
+                    if (scrollTop > threshold) {
+                        // If we are scrolled down past threshold, collapse header
+                        header.classList.add('header-collapsed');
+                    } else {
+                        // If we are at the top, show header
+                        header.classList.remove('header-collapsed');
+                    }
+                }, { passive: true });
+            }
+        } catch (e) {
+            console.log('Error attaching scroll listener: ' + e);
+        }
+
         if (localStorage.getItem('messageDarkMode') === 'true') {
             var doc = iframe.contentDocument || iframe.contentWindow.document;
             if (!doc) return;
@@ -642,6 +672,19 @@
                     showModalAlert('Failed to mark all as read.');
                 });
         }
+    }
+
+    function viewDiagnostics(id) {
+        var container = document.getElementById('diagnostics-container-' + id);
+        if (container.classList.contains('show')) {
+            container.classList.remove('show');
+        } else {
+            container.classList.add('show');
+        }
+    }
+
+    function closeDiagnostics(id) {
+        document.getElementById('diagnostics-container-' + id).classList.remove('show');
     }
 
     function summarizeEmail(id) {
@@ -750,6 +793,92 @@
             .always(() => {
                 btn.disabled = false;
             });
+    }
+
+    function trustSender(email) {
+        if (!email) return;
+
+        // Optimistically find the trust button to disable it
+        var trustBtn = document.querySelector('form[action$="TrustSender"] button');
+        if (trustBtn) {
+            trustBtn.disabled = true;
+            trustBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Trusting...';
+        }
+
+        $.post('@Url.Action("TrustSender", "Mail")', { email: email })
+            .done(function () {
+                var activeId = $('.mail-list-item.active').data('id');
+                if (activeId) {
+                    loadMessage(activeId);
+                }
+            })
+            .fail(function () {
+                showModalAlert('Failed to trust sender.');
+                if (trustBtn) {
+                    trustBtn.disabled = false;
+                    trustBtn.innerHTML = 'Trust sender';
+                }
+            });
+    }
+
+    // Swipe to Go Back Logic
+    var xDown = null;
+    var yDown = null;
+
+    function getTouches(evt) {
+        return evt.touches || evt.originalEvent.touches;
+    }
+
+    function handleTouchStart(evt) {
+        const firstTouch = getTouches(evt)[0];
+        xDown = firstTouch.clientX;
+        yDown = firstTouch.clientY;
+    };
+
+    function handleTouchMove(evt) {
+        if (!xDown || !yDown) {
+            return;
+        }
+
+        var xUp = getTouches(evt)[0].clientX;
+        var yUp = getTouches(evt)[0].clientY;
+
+        var xDiff = xDown - xUp;
+        var yDiff = yDown - yUp;
+
+        // Check if horizontal swipe dominant
+        if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            // Threshold for swipe
+            if (Math.abs(xDiff) > 100) {
+                if (xDiff < 0) {
+                    // Right swipe -> Go Back
+                    if ($('body').hasClass('show-reading-pane')) {
+                        showList();
+                    }
+                }
+                // Reset
+                xDown = null;
+                yDown = null;
+            }
+        } else {
+            // Vertical swipe - do nothing (let it scroll)
+        }
+    };
+
+    // Initialize Global Touch Listeners
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+
+    function enableFrameSwipe(iframe) {
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (doc) {
+                doc.addEventListener('touchstart', handleTouchStart, false);
+                doc.addEventListener('touchmove', handleTouchMove, false);
+            }
+        } catch (e) {
+            console.log('Cannot attach swipe to iframe (likely cross-origin restriction, though self-hosted should be fine): ' + e);
+        }
     }
 </script>
 

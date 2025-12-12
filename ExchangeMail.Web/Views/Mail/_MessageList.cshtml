@@ -2,6 +2,30 @@
 @model IEnumerable<MimeMessage>
 
 <div class="d-flex flex-column h-100">
+    <style>
+        @@media (max-width: 768px) {
+            .mail-list-item {
+                padding: 1rem !important;
+            }
+            .mail-list-item .sender {
+                font-size: 1rem !important;
+                margin-bottom: 0.25rem;
+            }
+            .mail-list-item .subject {
+                font-size: 1.1rem !important;
+                font-weight: 600;
+                margin-bottom: 0.25rem;
+            }
+            .mail-list-item .preview {
+                font-size: 0.95rem !important;
+                white-space: normal; /* Allow wrapping */
+                display: -webkit-box;
+                -webkit-line-clamp: 2; /* Show 2 lines */
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+        }
+    </style>
     <div class="p-2 border-bottom d-flex gap-2">
         <form id="searchForm" class="input-group input-group-sm flex-grow-1">
             <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
@@ -14,6 +38,10 @@
     </div>
 
     <div class="flex-grow-1 overflow-auto" id="messageListContainer">
+        <div id="ptr-indicator" class="ptr-indicator">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 small text-muted">Pull to refresh...</span>
+        </div>
         @if (!Model.Any())
         {
             <div class="text-center p-4 text-muted">

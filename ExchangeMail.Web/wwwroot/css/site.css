@@ -83,6 +83,7 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  transition: grid-template-columns 0.3s ease;
 }
 
 .mail-sidebar {
@@ -91,6 +92,7 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: width 0.3s ease;
 }
 
 .mail-list {
@@ -202,10 +204,15 @@ body {
   /* Sidebar Drawer Style */
   .mail-sidebar {
     z-index: 1050;
-    display: none;
+    /* display: none; Removed for animation */
+    display: flex;
     width: 85%;
     max-width: 320px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+
+    /* Animation props */
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .mail-list {
@@ -220,7 +227,8 @@ body {
 
   /* Visibility Toggles */
   .show-sidebar .mail-sidebar {
-    display: flex;
+    /* display: flex; Removed */
+    transform: translateX(0);
   }
 
   .show-reading-pane .mail-reading-pane {
@@ -229,6 +237,74 @@ body {
 
   .show-reading-pane .mail-list {
     display: none;
+  }
+}
+
+/* Pull to Refresh */
+.ptr-indicator {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  background-color: var(--bs-body-bg);
+}
+
+.ptr-indicator.active {
+  height: 60px;
+  opacity: 1;
+}
+
+/* Collapsible Header on Mobile */
+.header-transition {
+  transition: margin-top 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+/* When collapsed, we pull it up by its height (handled via JS setting margin usually, or we use max-height? 
+     Margin-top is better if we want it to slide up off screen. 
+     Actually, if we just want it to disappear, max-height 0 works but content reflows.
+     Let's use a class that we can toggle.
+  */
+
+@media (max-width: 768px) {
+
+  /* Instead of hiding the whole header, we modify its children */
+  .header-collapsed .reading-pane-info {
+    display: none !important;
+  }
+
+  .header-collapsed .reading-pane-toolbar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 0.5rem !important;
+    margin-bottom: 0 !important;
+    justify-content: flex-start !important;
+    /* Align everything to start for scrolling */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+    gap: 0.5rem !important;
+  }
+
+  .header-collapsed .reading-pane-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Force all nested flex containers to row and nowrap */
+  .header-collapsed .reading-pane-toolbar .d-flex {
+    flex-wrap: nowrap !important;
+    flex-shrink: 0;
+    /* Prevent items from shrinking */
+  }
+
+  /* Ensure buttons don't wrap */
+  .header-collapsed .reading-pane-toolbar .btn-group,
+  .header-collapsed .reading-pane-toolbar .gap-2 {
+    flex-wrap: nowrap !important;
   }
 }
 
