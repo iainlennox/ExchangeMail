@@ -25,6 +25,8 @@ ExchangeMail aims to fill this gap for users who prefer a standalone, perpetual,
 -   **PST Import**: Import existing email archives from PST files using the `PstImportService`.
 
 ### 🛡️ Security & Filtering
+-   **Two-Factor Authentication (2FA)**: Secure your account with TOTP-based 2FA (compatible with Google/Microsoft Authenticator).
+-   **Admin Password Reset**: administrators can reset user passwords directly from the user management dashboard.
 -   **Spam Protection**: Integrated `BasicJunkFilterService` to identify and filter junk mail.
 -   **Block & Safe Lists**: Manage blocked senders and safe senders to control your inbox.
 -   **Session-based Authentication**: Secure user access management.

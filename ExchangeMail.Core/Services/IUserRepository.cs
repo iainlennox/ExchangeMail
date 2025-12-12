@@ -17,4 +17,11 @@ public interface IUserRepository
     Task<bool> GetAnimationsAsync(string username);
     Task UpdateAutoLabelingAsync(string username, bool enableAutoLabeling);
     Task<bool> GetAutoLabelingAsync(string username);
+    Task ResetPasswordAsync(string username, string newPassword);
+
+    // 2FA
+    Task SetTwoFactorSecretAsync(string username, string secret);
+    Task<string?> GetTwoFactorSecretAsync(string username);
+    Task SetTwoFactorEnabledAsync(string username, bool enabled);
+    Task<bool> GetTwoFactorEnabledAsync(string username);
 }

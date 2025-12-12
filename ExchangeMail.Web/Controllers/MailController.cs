@@ -67,33 +67,83 @@ public class MailController : Controller
         var user = await _userRepository.ValidateUserAsync(username, password);
         if (user != null)
         {
-            var claims = new List<Claim>
+            if (user.IsTwoFactorEnabled)
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim("Username", user.Username),
-                new Claim("IsAdmin", user.IsAdmin.ToString())
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = rememberMe
-            };
-
-            if (rememberMe)
-            {
-                authProperties.ExpiresUtc = DateTime.UtcNow.AddDays(30);
+                TempData["PendingUserId"] = user.Username;
+                TempData["RememberMe"] = rememberMe;
+                return RedirectToAction("LoginTwoFactor");
             }
 
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
-
+            await SignInUserAsync(user.Username, user.IsAdmin, rememberMe);
             return RedirectToAction("Index");
         }
         ModelState.AddModelError("", "Invalid username or password");
         return View();
+    }
+
+    [HttpGet]
+    public IActionResult LoginTwoFactor()
+    {
+        if (TempData["PendingUserId"] == null) return RedirectToAction("Login");
+        TempData.Keep("PendingUserId");
+        TempData.Keep("RememberMe");
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> LoginTwoFactor(string code)
+    {
+        var username = TempData["PendingUserId"] as string;
+        var rememberMe = (bool)(TempData["RememberMe"] ?? false);
+
+        if (string.IsNullOrEmpty(username)) return RedirectToAction("Login");
+
+        var secret = await _userRepository.GetTwoFactorSecretAsync(username);
+        if (string.IsNullOrEmpty(secret)) return RedirectToAction("Login"); // Should not happen if flow is correct
+
+        var totp = new OtpNet.Totp(OtpNet.Base32Encoding.ToBytes(secret));
+        bool valid = totp.VerifyTotp(code, out _, new OtpNet.VerificationWindow(2, 2));
+
+        if (valid)
+        {
+            var user = await _userRepository.GetUserAsync(username);
+            if (user != null)
+            {
+                await SignInUserAsync(user.Username, user.IsAdmin, rememberMe);
+                return RedirectToAction("Index");
+            }
+        }
+
+        ModelState.AddModelError("", "Invalid authentication code.");
+        TempData.Keep("PendingUserId");
+        TempData.Keep("RememberMe");
+        return View();
+    }
+
+    private async Task SignInUserAsync(string username, bool isAdmin, bool rememberMe)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, username),
+            new Claim("Username", username),
+            new Claim("IsAdmin", isAdmin.ToString())
+        };
+
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var authProperties = new AuthenticationProperties
+        {
+            IsPersistent = rememberMe
+        };
+
+        if (rememberMe)
+        {
+            authProperties.ExpiresUtc = DateTime.UtcNow.AddDays(30);
+        }
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(claimsIdentity),
+            authProperties);
     }
 
     [HttpPost]

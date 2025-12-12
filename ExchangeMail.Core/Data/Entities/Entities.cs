@@ -12,6 +12,8 @@ public class UserEntity
     public string? Signature { get; set; }
     public bool EnableAnimations { get; set; }
     public bool EnableAutoLabeling { get; set; }
+    public string? TwoFactorSecret { get; set; }
+    public bool IsTwoFactorEnabled { get; set; }
 }
 
 public class MessageEntity
