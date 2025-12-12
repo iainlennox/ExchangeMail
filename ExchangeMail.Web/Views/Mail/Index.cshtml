@@ -617,6 +617,33 @@
         // Ensure swipe works in iframe
         enableFrameSwipe(iframe);
 
+        // Collapsible Header Logic (Mobile)
+        try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            var win = iframe.contentWindow;
+            var lastScrollTop = 0;
+            var header = document.getElementById('readingPaneHeader');
+
+            if (doc && header) {
+                win.addEventListener('scroll', function() {
+                    if (window.innerWidth > 768) return; // Mobile only
+
+                    var scrollTop = win.pageYOffset || doc.documentElement.scrollTop;
+                    var threshold = 50; // Minimum scroll to trigger collapse
+
+                    if (scrollTop > threshold) {
+                        // If we are scrolled down past threshold, collapse header
+                        header.classList.add('header-collapsed');
+                    } else {
+                        // If we are at the top, show header
+                        header.classList.remove('header-collapsed');
+                    }
+                }, { passive: true });
+            }
+        } catch (e) {
+            console.log('Error attaching scroll listener: ' + e);
+        }
+
         if (localStorage.getItem('messageDarkMode') === 'true') {
             var doc = iframe.contentDocument || iframe.contentWindow.document;
             if (!doc) return;

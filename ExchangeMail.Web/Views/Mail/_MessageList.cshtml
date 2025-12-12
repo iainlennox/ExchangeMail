@@ -38,6 +38,10 @@
     </div>
 
     <div class="flex-grow-1 overflow-auto" id="messageListContainer">
+        <div id="ptr-indicator" class="ptr-indicator">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2 small text-muted">Pull to refresh...</span>
+        </div>
         @if (!Model.Any())
         {
             <div class="text-center p-4 text-muted">
