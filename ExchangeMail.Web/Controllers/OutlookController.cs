@@ -54,7 +54,7 @@ public class OutlookController : Controller
         // 2. Get Pending Tasks (Due today or Overdue, or all active if we want)
         // For briefing, let's focus on what's actionable NOW.
         // We'll fetch all active tasks and filter in memory for simplicity or usage of existing repo methods.
-        var allTasks = await _taskRepository.GetTasksAsync(userEmail, includeCompleted: false);
+        var allTasks = await _taskRepository.GetTasksAsync(userEmail, filterType: "active");
         var relevantTasks = allTasks
             .Where(t => t.DueDate.HasValue && t.DueDate.Value.Date <= today) // Due today or overdue
             .OrderBy(t => t.DueDate)

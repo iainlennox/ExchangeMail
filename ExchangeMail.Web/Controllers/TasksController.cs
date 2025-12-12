@@ -34,13 +34,13 @@ public class TasksController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetTasks(bool includeCompleted = false)
+    public async Task<IActionResult> GetTasks(string? filter = "active", string? searchQuery = null, string? sortBy = null, bool sortDesc = false)
     {
         var username = GetCurrentUser();
         if (username == null) return Unauthorized();
 
         var userEmail = await GetUserEmailAsync();
-        var tasks = await _taskRepository.GetTasksAsync(userEmail, includeCompleted);
+        var tasks = await _taskRepository.GetTasksAsync(userEmail, filter, searchQuery, sortBy, sortDesc);
 
         return Json(tasks);
     }
@@ -72,6 +72,13 @@ public class TasksController : Controller
             existing.DueDate = model.DueDate;
             existing.Description = model.Description;
             existing.Priority = model.Priority;
+            existing.Tags = model.Tags;
+
+            // New Fields
+            existing.Status = model.Status;
+
+            // Sync backward compatibility
+            existing.IsCompleted = existing.Status == Core.Data.Entities.TaskStatus.Completed;
             // IsCompleted is handled by ToggleComplete usually, but we allow editing here too if needed
 
             await _taskRepository.UpdateTaskAsync(existing);
@@ -93,6 +100,9 @@ public class TasksController : Controller
         if (existing.UserEmail != userEmail) return Forbid();
 
         existing.IsCompleted = !existing.IsCompleted;
+        // Sync Status
+        existing.Status = existing.IsCompleted ? Core.Data.Entities.TaskStatus.Completed : Core.Data.Entities.TaskStatus.Active;
+
         await _taskRepository.UpdateTaskAsync(existing);
 
         return Ok(existing.IsCompleted);

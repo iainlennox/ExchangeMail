@@ -28,12 +28,51 @@
         text-decoration: line-through;
         color: var(--bs-text-muted);
     }
+
+    @@media(max-width:767.98px) {
+        .tasks-sidebar {
+            display: none !important;
+            position: fixed;
+            /* Fixed to cover nicely */
+            top: 56px;
+            /* Below navbar roughly, or 0 if full height? Wrapper is h-100. Let's use absolute relative to container if possible, or fixed. Container is d-flex h-100. */
+            /* The Layout likely has a navbar. If I use absolute, it's relative to the d-flex h-100 container. */
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            width: 85% !important;
+            /* Slightly narrower than full screen */
+            box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .tasks-sidebar.show {
+            display: flex !important;
+        }
+
+        /* Scrim for closing? Simpler to just have a close button or toggle. */
+    }
 </style>
 
-<div class="d-flex h-100">
+<div class="d-flex h-100 position-relative">
     <!-- Sidebar Filters -->
-    <div class="d-flex flex-column border-end bg-body-tertiary p-3" style="width: 250px;">
-        <h5 class="mb-3">Tasks</h5>
+    <div id="tasksSidebar" class="d-flex flex-column border-end bg-body-tertiary p-3 tasks-sidebar"
+        style="width: 280px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Tasks</h5>
+            <button class="btn btn-sm btn-icon d-md-none" onclick="tasksMgr.toggleSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Search -->
+        <div class="input-group mb-3">
+            <span class="input-group-text bg-body border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0" id="taskSearch" placeholder="Search tasks..."
+                onkeyup="tasksMgr.search()">
+        </div>
+
         <div class="list-group list-group-flush mb-3">
             <button class="list-group-item list-group-item-action active" id="filter-active"
                 onclick="tasksMgr.filter('active')">
@@ -44,14 +83,40 @@
                 <i class="bi bi-check2-square me-2"></i> Completed
             </button>
         </div>
+
+        <div class="mb-3">
+            <label class="form-label small text-muted">Sort By</label>
+            <select class="form-select form-select-sm" id="taskSort" onchange="tasksMgr.sort()">
+                <option value="priority_desc">Priority (High to Low)</option>
+                <option value="priority_asc">Priority (Low to High)</option>
+                <option value="date_asc">Due Date (Soonest)</option>
+                <option value="date_desc">Due Date (Latest)</option>
+                <option value="created_desc">Recently Added</option>
+            </select>
+        </div>
+
         <button class="btn btn-primary w-100 mt-auto" onclick="tasksMgr.openAddModal()">
             <i class="bi bi-plus-lg me-2"></i> New Task
         </button>
     </div>
 
     <!-- Task List -->
-    <div class="flex-grow-1 p-0 overflow-auto bg-body" id="taskListContainer">
-        <!-- JS renders here -->
+    <div class="flex-grow-1 d-flex flex-column h-100 bg-body">
+        <!-- Quick Add -->
+        <div class="p-3 border-bottom bg-body-tertiary">
+            <div class="input-group input-group-lg">
+                <button class="btn btn-outline-secondary d-md-none border-0" onclick="tasksMgr.toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <span class="input-group-text bg-body"><i class="bi bi-plus-lg"></i></span>
+                <input type="text" class="form-control" id="quickAddInput" placeholder="Add a task..."
+                    onkeydown="tasksMgr.handleQuickAdd(event)">
+            </div>
+        </div>
+
+        <div class="flex-grow-1 overflow-auto p-0" id="taskListContainer">
+            <!-- JS renders here -->
+        </div>
     </div>
 </div>
 
@@ -66,15 +131,34 @@
             <div class="modal-body">
                 <form id="taskForm">
                     <input type="hidden" id="taskId" name="Id" value="0" />
+
+                    <!-- Linked Email Info -->
+                    <div id="linkedEmailAlert" class="alert alert-light border d-flex align-items-center mb-3"
+                        style="display:none;">
+                        <i class="bi bi-envelope-fill text-primary me-2"></i>
+                        <div class="flex-grow-1 small">
+                            <strong>Linked Email:</strong> <span id="linkedEmailSender"></span><br />
+                            <span id="linkedEmailSubject" class="text-muted"></span>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <input type="text" class="form-control form-control-lg" id="taskSubject" name="Subject"
                             placeholder="What needs to be done?" required>
                     </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col">
-                            <label for="taskDueDate" class="form-label small text-muted">Due Date</label>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Due Date</label>
+                        <div class="input-group">
                             <input type="date" class="form-control" id="taskDueDate" name="DueDate">
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="tasksMgr.setDate('today')">Today</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="tasksMgr.setDate('tomorrow')">Tom</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="tasksMgr.setDate('nextweek')">Next Wk</button>
                         </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
                         <div class="col">
                             <label for="taskPriority" class="form-label small text-muted">Priority</label>
                             <select class="form-select" id="taskPriority" name="Priority">
@@ -83,7 +167,22 @@
                                 <option value="2">High</option>
                             </select>
                         </div>
+                        <div class="col">
+                            <label for="taskStatus" class="form-label small text-muted">Status</label>
+                            <select class="form-select" id="taskStatus" name="Status">
+                                <option value="0">Active</option>
+                                <option value="2">Waiting</option>
+                                <option value="3">Blocked</option>
+                                <option value="1">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="taskTags" class="form-label small text-muted">Tags</label>
+                            <input type="text" class="form-control" id="taskTags" name="Tags"
+                                placeholder="e.g. Work, Urgent">
+                        </div>
                     </div>
+
                     <div class="mb-3">
                         <label for="taskDescription" class="form-label small text-muted">Notes</label>
                         <textarea class="form-control" id="taskDescription" name="Description" rows="3"
@@ -107,6 +206,9 @@
 <script>
     const tasksMgr = {
         currentFilter: 'active',
+        searchQuery: '',
+        sortBy: '',
+        sortDesc: false,
         tasks: [],
 
         init: function () {
@@ -115,7 +217,14 @@
 
         loadTasks: function () {
             const includeCompleted = this.currentFilter === 'completed';
-            $.get('/Tasks/GetTasks', { includeCompleted: includeCompleted })
+            const data = {
+                includeCompleted: includeCompleted,
+                searchQuery: this.searchQuery,
+                sortBy: this.sortBy,
+                sortDesc: this.sortDesc
+            };
+
+            $.get('/Tasks/GetTasks', data)
                 .done(data => {
                     this.tasks = data;
                     this.render();
@@ -138,16 +247,33 @@
                 const completedClass = task.isCompleted ? 'task-completed' : '';
                 const checkClass = task.isCompleted ? 'bi-check-circle-fill text-success' : 'bi-circle';
 
+                const tagsHtml = task.tags ? task.tags.split(',').map(t => `<span class="badge bg-secondary me-1">${t.trim()}</span>`).join('') : '';
+
+                const linkedEmailHtml = task.emailSender ?
+                    `<div class="mt-2 small text-muted border-top pt-2">
+                        <i class="bi bi-envelope me-1"></i> 
+                        From: <span class="fw-bold">${task.emailSender}</span>
+                        ${task.origin === 'Email' ? '<span class="badge bg-light text-dark border ms-1">Email</span>' : ''}
+                     </div>` : '';
+
                 const item = $(`
                         <div class="list-group-item list-group-item-action p-3 task-item ${priorityClass} ${completedClass}" data-id="${task.id}">
                             <div class="d-flex align-items-center">
                                 <i class="bi ${checkClass} fs-4 me-3" style="cursor:pointer;" onclick="tasksMgr.toggleComplete(${task.id}, event)"></i>
                                 <div class="flex-grow-1" onclick="tasksMgr.editTask(${task.id})">
                                     <div class="d-flex justify-content-between align-items-baseline">
-                                        <h6 class="mb-0 task-subject">${task.subject}</h6>
-                                        <small class="text-muted ms-2">${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''}</small>
+                                        <div>
+                                            <h6 class="mb-0 task-subject d-inline-block">${task.subject}</h6>
+                                            ${tagsHtml}
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''}</small>
+                                            ${task.status === 2 ? '<span class="badge bg-warning text-dark">Waiting</span>' : ''}
+                                            ${task.status === 3 ? '<span class="badge bg-danger">Blocked</span>' : ''}
+                                        </div>
                                     </div>
                                     <p class="mb-0 text-muted small text-truncate" style="max-width: 500px;">${task.description || ''}</p>
+                                    ${linkedEmailHtml}
                                 </div>
                             </div>
                         </div>
@@ -160,8 +286,9 @@
 
         filter: function (type) {
             this.currentFilter = type;
-            $('.list-group-item').removeClass('active');
+            $('.list-group-item-action').removeClass('active');
             $(`#filter-${type}`).addClass('active');
+            $('#tasksSidebar').removeClass('show');
             this.loadTasks();
         },
 
@@ -189,6 +316,16 @@
             $('#taskSubject').val(task.subject);
             $('#taskDescription').val(task.description);
             $('#taskPriority').val(task.priority);
+            $('#taskStatus').val(task.status !== undefined ? task.status : (task.isCompleted ? 1 : 0));
+            $('#taskTags').val(task.tags || '');
+
+            if (task.emailSender) {
+                $('#linkedEmailAlert').show();
+                $('#linkedEmailSender').text(task.emailSender);
+                $('#linkedEmailSubject').text(task.emailSubject || task.subject);
+            } else {
+                $('#linkedEmailAlert').hide();
+            }
 
             if (task.dueDate) {
                 // Format Date for Input
@@ -222,6 +359,8 @@
                 });
         },
 
+
+
         deleteTask: function () {
             const id = $('#taskId').val();
             if (!confirm('Delete this task?')) return;
@@ -231,6 +370,51 @@
                     $('#taskModal').modal('hide');
                     this.loadTasks();
                 });
+        },
+
+        search: function () {
+            clearTimeout(this.searchTimer);
+            this.searchTimer = setTimeout(() => {
+                this.searchQuery = $('#taskSearch').val();
+                this.loadTasks();
+            }, 300);
+        },
+
+        toggleSidebar: function () {
+            $('#tasksSidebar').toggleClass('show');
+        },
+
+        sort: function () {
+            const val = $('#taskSort').val(); // e.g., 'priority_desc'
+            const parts = val.split('_');
+            this.sortBy = parts[0];
+            this.sortDesc = parts[1] === 'desc';
+            this.loadTasks();
+        },
+
+        handleQuickAdd: function (e) {
+            if (e.key === 'Enter') {
+                const subject = $('#quickAddInput').val().trim();
+                if (!subject) return;
+
+                $.post('/Tasks/SaveTask', { Subject: subject, Priority: 1 }) // Default normal priority
+                    .done(() => {
+                        $('#quickAddInput').val('');
+                        this.loadTasks();
+                    });
+            }
+        },
+
+        setDate: function (type) {
+            const d = new Date();
+            if (type === 'tomorrow') {
+                d.setDate(d.getDate() + 1);
+            } else if (type === 'nextweek') {
+                d.setDate(d.getDate() + 7);
+            }
+            // 'today' is default d
+            const dateStr = d.toISOString().split('T')[0];
+            $('#taskDueDate').val(dateStr);
         }
     };
 

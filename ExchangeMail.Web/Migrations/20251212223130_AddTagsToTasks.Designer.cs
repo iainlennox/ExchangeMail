@@ -3,6 +3,7 @@ using System;
 using ExchangeMail.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExchangeMail.Web.Migrations
 {
     [DbContext(typeof(ExchangeMailContext))]
-    partial class ExchangeMailContextModelSnapshot : ModelSnapshot
+    [Migration("20251212223130_AddTagsToTasks")]
+    partial class AddTagsToTasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -314,29 +317,10 @@ namespace ExchangeMail.Web.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("EmailDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EmailMessageId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EmailSender")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EmailSubject")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Origin")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Priority")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Subject")
