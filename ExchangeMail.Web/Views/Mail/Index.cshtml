@@ -103,6 +103,48 @@
     </div>
 </div>
 
+<!-- Task Creation Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTaskModalLabel">Create Task from Email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createTaskForm">
+                    <div class="mb-3">
+                        <label for="taskSubject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="taskSubject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="0">Low</option>
+                                <option value="1" selected>Normal</option>
+                                <option value="2">High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="taskDueDate" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="taskDueDate">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitCreateTask()">Create Task</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     function loadMessage(id, elementOrShowBlocked) {
@@ -301,6 +343,7 @@
             '<a class="dropdown-item" href="#" id="ctx-mark-unread"><i class="bi bi-envelope me-2"></i>Mark as Unread</a>' +
             '<div class="dropdown-divider"></div>' +
             '<a class="dropdown-item" href="#" id="ctx-delete"><i class="bi bi-trash me-2"></i>Delete</a>' +
+            '<a class="dropdown-item" href="#" id="ctx-create-task"><i class="bi bi-check2-square me-2"></i>Create Task</a>' +
             '<div class="dropdown-divider"></div>' +
             '<a class="dropdown-item" href="#" id="ctx-move-focused" style="display:none;"><i class="bi bi-bullseye me-2"></i>Move to Focused</a>' +
             '<a class="dropdown-item" href="#" id="ctx-move-other" style="display:none;"><i class="bi bi-archive me-2"></i>Move to Other</a>' +
@@ -445,6 +488,12 @@
             e.preventDefault();
             contextMenu.hide();
             if (selectedMessageId) deleteMessage(selectedMessageId);
+        });
+
+        $('#ctx-create-task').on('click', function (e) {
+            e.preventDefault();
+            contextMenu.hide();
+            if (selectedMessageId) createTaskFromEmail(selectedMessageId);
         });
 
         $('#ctx-move-focused').on('click', function (e) {
@@ -625,7 +674,7 @@
             var header = document.getElementById('readingPaneHeader');
 
             if (doc && header) {
-                win.addEventListener('scroll', function() {
+                win.addEventListener('scroll', function () {
                     if (window.innerWidth > 768) return; // Mobile only
 
                     var scrollTop = win.pageYOffset || doc.documentElement.scrollTop;
@@ -798,28 +847,102 @@
     function trustSender(email) {
         if (!email) return;
 
-        // Optimistically find the trust button to disable it
-        var trustBtn = document.querySelector('form[action$="TrustSender"] button');
-        if (trustBtn) {
-            trustBtn.disabled = true;
-            trustBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Trusting...';
-        }
-
-        $.post('@Url.Action("TrustSender", "Mail")', { email: email })
+        $.post('@Url.Action("TrustSender", "Mail")', { email: email, returnUrl: window.location.href })
             .done(function () {
-                var activeId = $('.mail-list-item.active').data('id');
-                if (activeId) {
-                    loadMessage(activeId);
-                }
+                location.reload();
             })
             .fail(function () {
                 showModalAlert('Failed to trust sender.');
-                if (trustBtn) {
-                    trustBtn.disabled = false;
-                    trustBtn.innerHTML = 'Trust sender';
-                }
             });
     }
+
+    function createTaskFromEmail(id) {
+        var subject = "";
+        var description = "";
+        var sender = "";
+        var messageId = "";
+
+        // 1. Try to find the item in the list
+        var activeItem = $('.mail-list-item[data-id="' + id + '"]');
+        if (activeItem.length) {
+            subject = activeItem.find('.subject').text().trim();
+            sender = activeItem.find('.sender').text().trim();
+            messageId = id;
+
+            var preview = activeItem.find('.preview').text().trim();
+            if (preview && preview !== "No preview available") {
+                description = "From email: " + subject + "\n\nPreview: " + preview;
+            } else {
+                description = "From email: " + subject;
+            }
+        } else {
+            // 2. Fallback to reading pane if visible
+            var headerSubject = $('#readingPane').find('h4').text().trim();
+            if (headerSubject) {
+                subject = headerSubject;
+                description = "From email: " + subject;
+            }
+        }
+
+        // populate modal
+        $('#taskSubject').val(subject);
+        $('#taskDescription').val(description);
+
+        // Store metadata
+        $('#createTaskModal').data('email-sender', sender);
+        $('#createTaskModal').data('email-message-id', messageId);
+
+        // Show modal
+        var modal = new bootstrap.Modal(document.getElementById('createTaskModal'));
+        modal.show();
+    }
+
+    function submitCreateTask() {
+        var subject = $('#taskSubject').val();
+        var description = $('#taskDescription').val();
+        var priority = $('#taskPriority').val();
+        var dueDate = $('#taskDueDate').val();
+
+        var sender = $('#createTaskModal').data('email-sender');
+        var messageId = $('#createTaskModal').data('email-message-id');
+
+        if (!subject) {
+            alert("Subject is required");
+            return;
+        }
+
+        var btn = $('#createTaskModal .btn-primary');
+        var originalText = btn.text();
+        btn.prop('disabled', true).text('Creating...');
+
+        $.post('/Tasks/SaveTask', {
+            Subject: subject,
+            Description: description,
+            Priority: priority,
+            DueDate: dueDate,
+            Origin: 'Email',
+            EmailSubject: subject,
+            EmailSender: sender,
+            EmailMessageId: messageId,
+            Status: 0
+        })
+            .done(() => {
+                // Hide modal
+                var modalEl = document.getElementById('createTaskModal');
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                showModalAlert("Task created successfully!");
+            })
+            .fail(() => {
+                showModalAlert("Failed to create task.");
+            })
+            .always(() => {
+                btn.prop('disabled', false).text(originalText);
+            });
+    }
+
+
 
     // Swipe to Go Back Logic
     var xDown = null;

@@ -369,7 +369,7 @@ public class AdminController : Controller
 
         try
         {
-            var userTasks = await _taskRepository.GetTasksAsync(username, true);
+            var userTasks = await _taskRepository.GetTasksAsync(username, filterType: "all");
             var demoTaskSubjects = new[] { "Submit Expense Report", "Prepare Presentation" };
             foreach (var t in userTasks.Where(x => demoTaskSubjects.Contains(x.Subject)))
             {

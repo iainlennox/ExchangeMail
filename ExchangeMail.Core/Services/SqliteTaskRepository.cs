@@ -13,22 +13,63 @@ public class SqliteTaskRepository : ITaskRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<TaskEntity>> GetTasksAsync(string userEmail, bool includeCompleted = false)
+    public async Task<IEnumerable<TaskEntity>> GetTasksAsync(string userEmail, string? filterType = "active", string? searchQuery = null, string? sortBy = null, bool sortDesc = false)
     {
         var query = _context.Tasks.Where(t => t.UserEmail == userEmail);
 
-        if (!includeCompleted)
+        // Filter Logic
+        switch (filterType?.ToLower())
         {
-            query = query.Where(t => !t.IsCompleted);
+            case "completed":
+                query = query.Where(t => t.Status == Data.Entities.TaskStatus.Completed);
+                break;
+            case "waiting":
+                query = query.Where(t => t.Status == Data.Entities.TaskStatus.Waiting);
+                break;
+            case "blocked":
+                query = query.Where(t => t.Status == Data.Entities.TaskStatus.Blocked);
+                break;
+            case "email":
+                query = query.Where(t => t.Origin == "Email" && t.Status != Data.Entities.TaskStatus.Completed);
+                break;
+            case "all":
+                // No filter, return everything
+                break;
+            case "active":
+            default:
+                // Show all non-completed
+                query = query.Where(t => t.Status != Data.Entities.TaskStatus.Completed);
+                break;
         }
 
-        // Order by DueDate (nulls last), then Priority (High to Low), then Id
-        return await query
-            .OrderBy(t => t.IsCompleted) // Completed last
-            .ThenBy(t => t.DueDate.HasValue ? 0 : 1) // Due dates first
-            .ThenBy(t => t.DueDate)
-            .ThenByDescending(t => t.Priority)
-            .ToListAsync();
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            searchQuery = searchQuery.ToLower();
+            query = query.Where(t => t.Subject.ToLower().Contains(searchQuery) ||
+                                     (t.Description != null && t.Description.ToLower().Contains(searchQuery)) ||
+                                     (t.Tags != null && t.Tags.ToLower().Contains(searchQuery)));
+        }
+
+        // Sorting
+        query = sortBy?.ToLower() switch
+        {
+            "priority" => sortDesc ? query.OrderByDescending(t => t.Priority) : query.OrderBy(t => t.Priority),
+            "date" => sortDesc ? query.OrderByDescending(t => t.DueDate) : query.OrderBy(t => t.DueDate),
+            "created" => sortDesc ? query.OrderByDescending(t => t.Id) : query.OrderBy(t => t.Id), // Proxy for created
+            _ => query // Default below
+        };
+
+        if (string.IsNullOrEmpty(sortBy))
+        {
+            // Default Sort: DueDate, then Priority, then Id
+            return await query
+               .OrderBy(t => t.DueDate.HasValue ? 0 : 1)
+               .ThenBy(t => t.DueDate)
+               .ThenByDescending(t => t.Priority)
+               .ToListAsync();
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<TaskEntity?> GetTaskAsync(int id)
