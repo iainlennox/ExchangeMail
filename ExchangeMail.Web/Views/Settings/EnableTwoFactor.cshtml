@@ -1,0 +1,50 @@
+@using ExchangeMail.Web.Controllers
+@{
+    ViewData["Title"] = "Enable Two-Factor Authentication";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Enable Two-Factor Authentication</h4>
+                </div>
+                <div class="card-body">
+                    @if (!ViewContext.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+                        </div>
+                    }
+
+                    <p>Scan the following QR code with your authenticator app (e.g., Google Authenticator, Microsoft
+                        Authenticator).</p>
+
+                    <div class="text-center mb-4">
+                        <!-- Use a simple QR code generator for now, can replace with local library later if needed -->
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@System.Net.WebUtility.UrlEncode(ViewBag.OtpAuthUri)"
+                            alt="QR Code" class="img-fluid border p-2" />
+                        <div class="mt-2 text-muted small">
+                            Secret: <code class="user-select-all">@ViewBag.Secret</code>
+                        </div>
+                    </div>
+
+                    <form asp-action="ConfirmEnableTwoFactor" method="post">
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control form-control-lg text-center" id="code" name="code"
+                                placeholder="000000" maxlength="6" required autocomplete="off" autofocus>
+                            <div class="form-text">Enter the 6-digit code from your app to confirm.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Verify and Enable</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

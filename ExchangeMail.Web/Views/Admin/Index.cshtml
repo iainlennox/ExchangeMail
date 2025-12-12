@@ -7,25 +7,25 @@
 <div class="container-lg py-4">
     @if (ViewBag.ConnectionString != null)
     {
-            <div class="alert alert-info">
-                <strong>Diagnostic Info:</strong> Connection String = @ViewBag.ConnectionString
-            </div>
+                <div class="alert alert-info">
+                    <strong>Diagnostic Info:</strong> Connection String = @ViewBag.ConnectionString
+                </div>
     }
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
     }
 
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
     }
     <div class="card shadow-sm border-0">
         <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-3">
@@ -55,41 +55,44 @@
                     <tbody>
                         @foreach (var user in Model)
                         {
-                                <tr>
-                                    <td class="ps-4 fw-medium">@user.Username</td>
-                                    <td>
+                                    <tr>
+                                        <td class="ps-4 fw-medium">@user.Username</td>
+                                        <td>
                                     @if (user.IsAdmin)
                                     {
-                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Admin</span>
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">Admin</span>
                                     }
                                     else
                                     {
-                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">User</span>
+                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">User</span>
                                     }
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <form asp-action="GenerateDemoData" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
-                                            <button type="button" class="btn btn-sm btn-outline-info" title="Generate Demo Data" onclick="confirmGenerateDemoData(this)">
-                                                <i class="bi bi-database-add"></i> Demo Data
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <form asp-action="GenerateDemoData" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
+                                                <button type="button" class="btn btn-sm btn-outline-info" title="Generate Demo Data" onclick="confirmGenerateDemoData(this)">
+                                                    <i class="bi bi-database-add"></i> Demo Data
+                                                </button>
+                                            </form>
+                                            <form asp-action="GenerateRuleTestEmails" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
+                                                <button type="button" class="btn btn-sm btn-outline-warning" title="Generate Rule Test Emails" onclick="confirmGenerateRuleTest(this)">
+                                                    <i class="bi bi-lightning-charge"></i> Test Rules
+                                                </button>
+                                            </form>
+                                            <form asp-action="ClearDemoData" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Clear Demo Data" onclick="confirmClearDemoData(this)">
+                                                    <i class="bi bi-database-x"></i> Clear
+                                                </button>
+                                            </form>
+                                            <form asp-action="DeleteUser" asp-route-username="@user.Username" method="post" style="display:inline;">
+                                                <button type="button" class="btn btn-sm btn-link text-danger" title="Delete User" onclick="confirmDeleteUser(this)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-sm btn-link text-warning" title="Reset Password" onclick="openResetPasswordModal('@user.Username')">
+                                                <i class="bi bi-key-fill"></i>
                                             </button>
-                                        </form>
-                                        <form asp-action="GenerateRuleTestEmails" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
-                                            <button type="button" class="btn btn-sm btn-outline-warning" title="Generate Rule Test Emails" onclick="confirmGenerateRuleTest(this)">
-                                                <i class="bi bi-lightning-charge"></i> Test Rules
-                                            </button>
-                                        </form>
-                                        <form asp-action="ClearDemoData" asp-route-username="@user.Username" method="post" style="display:inline;" class="me-2">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Clear Demo Data" onclick="confirmClearDemoData(this)">
-                                                <i class="bi bi-database-x"></i> Clear
-                                            </button>
-                                        </form>
-                                        <form asp-action="DeleteUser" asp-route-username="@user.Username" method="post" style="display:inline;">
-                                            <button type="button" class="btn btn-sm btn-link text-danger" title="Delete User" onclick="confirmDeleteUser(this)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                         }
                     </tbody>
                 </table>
@@ -106,19 +109,19 @@
                 <div class="card-body text-center p-4">
                     @if (ViewBag.ServerStatus == "Online")
                     {
-                            <div class="display-4 text-success mb-3"><i class="bi bi-hdd-network"></i></div>
-                            <h5 class="card-title fw-bold text-success">Online</h5>
-                            <p class="card-text text-muted small">Server is running.</p>
+                                <div class="display-4 text-success mb-3"><i class="bi bi-hdd-network"></i></div>
+                                <h5 class="card-title fw-bold text-success">Online</h5>
+                                <p class="card-text text-muted small">Server is running.</p>
                     }
                     else
                     {
-                            <div class="display-4 text-danger mb-3"><i class="bi bi-hdd-network"></i></div>
-                            <h5 class="card-title fw-bold text-danger">Offline</h5>
-                            <p class="card-text text-muted small">Server is stopped.</p>
+                                <div class="display-4 text-danger mb-3"><i class="bi bi-hdd-network"></i></div>
+                                <h5 class="card-title fw-bold text-danger">Offline</h5>
+                                <p class="card-text text-muted small">Server is stopped.</p>
                     }
                     @if (ViewBag.LastHeartbeat != null)
                     {
-                            <div class="text-muted small mt-2">Last seen: @ViewBag.LastHeartbeat.ToLocalTime().ToString("HH:mm:ss")</div>
+                                <div class="text-muted small mt-2">Last seen: @ViewBag.LastHeartbeat.ToLocalTime().ToString("HH:mm:ss")</div>
                     }
                 </div>
             </div>
@@ -158,6 +161,34 @@
     </div>
 </div>
 
+<!-- Password Reset Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ResetPassword" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="resetPasswordUsername" name="username" />
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                    </div>
+                    <div class="alert alert-warning">
+                        <small>The user will need this new password to log in.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     async function confirmDeleteUser(btn) {
         var form = btn.closest('form');
@@ -185,5 +216,12 @@
         if (await showModalConfirm('This will delete all demo data (events, tasks, emails) for this user. Continue?')) {
             form.submit();
         }
+    }
+
+    function openResetPasswordModal(username) {
+        document.getElementById('resetPasswordUsername').value = username;
+        document.getElementById('newPassword').value = ''; // Clear previous input
+        var myModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+        myModal.show();
     }
 </script>

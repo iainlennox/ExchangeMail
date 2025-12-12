@@ -164,4 +164,46 @@ public class SqliteUserRepository : IUserRepository
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         return user?.EnableAutoLabeling ?? false;
     }
+
+    public async Task ResetPasswordAsync(string username, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task SetTwoFactorSecretAsync(string username, string secret)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            user.TwoFactorSecret = secret;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<string?> GetTwoFactorSecretAsync(string username)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        return user?.TwoFactorSecret;
+    }
+
+    public async Task SetTwoFactorEnabledAsync(string username, bool enabled)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user != null)
+        {
+            user.IsTwoFactorEnabled = enabled;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<bool> GetTwoFactorEnabledAsync(string username)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        return user?.IsTwoFactorEnabled ?? false;
+    }
 }

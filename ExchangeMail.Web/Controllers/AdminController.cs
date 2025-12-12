@@ -93,6 +93,22 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    public async Task<IActionResult> ResetPassword(string username, string newPassword)
+    {
+        if (!IsAdmin()) return RedirectToAction("Login", "Mail");
+        try
+        {
+            await _userRepository.ResetPasswordAsync(username, newPassword);
+            TempData["SuccessMessage"] = $"Password reset successfully for user {username}.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error resetting password: {ex.Message}";
+        }
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
     public async Task<IActionResult> GenerateDemoData(string username)
     {
         if (!IsAdmin()) return RedirectToAction("Login", "Mail");
