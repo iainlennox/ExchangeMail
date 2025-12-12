@@ -1,131 +1,190 @@
 @using MimeKit
 @model MimeMessage
 
+<style>
+    .diagnostics-transition {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+    }
+    .diagnostics-transition.show {
+        max-height: 500px; /* Approximate max height */
+        opacity: 1;
+    }
+
+    /* Mobile Toolbar Enhancements */
+    @@media (max-width: 768px) {
+        .reading-pane-content .btn-sm {
+            padding: 0.5rem 0.75rem !important; /* Larger padding */
+            font-size: 1rem !important; /* Larger icon/text */
+            min-height: 44px; /* Minimum touch target height */
+            min-width: 44px; /* Minimum touch target width */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .reading-pane-content .gap-2 {
+            gap: 0.75rem !important; /* More space between buttons */
+        }
+    }
+</style>
+
 @if (Model == null)
 {
-    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-        <i class="bi bi-envelope-open fs-1 mb-3"></i>
-        <p>Select an item to read</p>
-    </div>
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+            <i class="bi bi-envelope-open fs-1 mb-3"></i>
+            <p>Select an item to read</p>
+        </div>
 }
 else
 {
-    <div class="d-flex flex-column h-100 reading-pane-content">
+        <div class="d-flex flex-column h-100 reading-pane-content">
         @{
             var dbId = Model.Headers["X-Db-Id"] ?? Model.MessageId;
         }
-        <!-- OWA Toolbar -->
-    <div class="border-bottom p-2 mb-3 bg-body-tertiary d-flex justify-content-between align-items-center sticky-top">
-            <div class="d-flex align-items-center">
-                <button class="btn btn-sm btn-link text-body me-2 d-md-none" onclick="showList()">
-                    <i class="bi bi-arrow-left fs-5"></i>
-                </button>
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="#" onclick="loadReply('@dbId'); return false;"
+            <!-- OWA Toolbar -->
+    <div class="border-bottom p-2 mb-3 bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-2 sticky-top rounded">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm btn-link text-body me-2 d-md-none" onclick="showList()">
+                        <i class="bi bi-arrow-left fs-5"></i>
+                    </button>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="#" onclick="loadReply('@dbId'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold px-2">
-                        <i class="bi bi-reply-fill me-1 text-primary"></i> Reply
-                    </a>
-                    <a href="#" onclick="loadForward('@dbId'); return false;"
+                            <i class="bi bi-reply-fill text-primary"></i><span class="d-none d-md-inline ms-1">Reply</span>
+                        </a>
+                        <a href="#" onclick="loadForward('@dbId'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold px-2">
-                        <i class="bi bi-forward-fill me-1 text-primary"></i> Forward
-                    </a>
-                    <button onclick="toggleMessageDarkMode()" id="btn-message-dark-mode"
+                            <i class="bi bi-forward-fill text-primary"></i><span class="d-none d-md-inline ms-1">Forward</span>
+                        </a>
+                        <button onclick="toggleMessageDarkMode()" id="btn-message-dark-mode"
                     class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold px-2"
                     title="Toggle Dark Mode">
-                        <i class="bi bi-moon-stars-fill me-1 text-primary"></i> Dark Mode
-                    </button>
+                            <i class="bi bi-moon-stars-fill text-primary"></i><span class="d-none d-md-inline ms-1">Dark Mode</span>
+                        </button>
                     @if (Model.Headers["X-Folder"] == "Junk Email")
                     {
-                        <a href="#" onclick="markAsNotJunk('@dbId'); return false;"
+                                <a href="#" onclick="markAsNotJunk('@dbId'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold px-2">
-                            <i class="bi bi-check-circle me-1 text-success"></i> Not Junk
-                        </a>
+                                    <i class="bi bi-check-circle text-success"></i><span class="d-none d-md-inline ms-1">Not Junk</span>
+                                </a>
                     }
                     else
                     {
-                        <a href="#" onclick="markAsJunk('@dbId'); return false;"
+                                <a href="#" onclick="markAsJunk('@dbId'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body fw-semibold px-2">
-                            <i class="bi bi-x-circle me-1 text-danger"></i> Junk
-                        </a>
+                                    <i class="bi bi-x-circle text-danger"></i><span class="d-none d-md-inline ms-1">Junk</span>
+                                </a>
                     }
                     @if (Model.Headers.Contains("X-Is-Deleted"))
                     {
-                        <a href="#"
+                                <a href="#"
                     onclick="deleteMessage('@dbId', 'Are you sure you want to permanently delete this message? This cannot be undone.'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body hover-danger px-2">
-                            <i class="bi bi-trash-fill text-danger"></i> Delete Forever
-                        </a>
+                                    <i class="bi bi-trash-fill text-danger"></i><span class="d-none d-md-inline ms-1">Delete Forever</span>
+                                </a>
                     }
                     else
                     {
-                        <a href="#" onclick="deleteMessage('@dbId'); return false;"
+                                <a href="#" onclick="deleteMessage('@dbId'); return false;"
                     class="btn btn-sm btn-outline-secondary border-0 text-body hover-danger px-2">
-                            <i class="bi bi-trash text-danger"></i> Delete
-                        </a>
+                                    <i class="bi bi-trash text-danger"></i><span class="d-none d-md-inline ms-1">Delete</span>
+                                </a>
                     }
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <button onclick="toggleUrgent('@dbId')" id="btn-urgent-@dbId"
+                <div class="d-flex gap-2">
+                    <button onclick="toggleUrgent('@dbId')" id="btn-urgent-@dbId"
                 class="btn btn-sm btn-outline-danger border-0 fw-semibold @(Model.Headers["X-Labels"]?.Contains("Urgent") == true ? "active" : "")"
                 title="Toggle High Priority">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Urgent
-                </button>
-                <button onclick="summarizeEmail('@dbId')" id="btn-summarize-@dbId"
+                        <i class="bi bi-exclamation-circle-fill"></i><span class="d-none d-md-inline ms-1">Urgent</span>
+                    </button>
+                    <button onclick="summarizeEmail('@dbId')" id="btn-summarize-@dbId"
                 class="btn btn-sm btn-outline-primary border-0 fw-semibold" title="Summarize with AI">
-                    <i class="bi bi-robot me-1"></i> Summarize
-                </button>
-                <a asp-action="Download" asp-route-id="@dbId"
+                        <i class="bi bi-robot"></i><span class="d-none d-md-inline ms-1">Summarize</span>
+                    </button>
+                    <button onclick="viewDiagnostics('@dbId')" class="btn btn-sm btn-outline-secondary border-0 fw-semibold" title="View Headers">
+                        <i class="bi bi-info-circle"></i><span class="d-none d-md-inline ms-1">Headers</span>
+                    </button>
+                    <a asp-action="Download" asp-route-id="@dbId"
                 class="btn btn-sm btn-link text-secondary text-decoration-none" title="Download Source">
-                    <i class="bi bi-download"></i>
-                </a>
+                        <i class="bi bi-download"></i>
+                    </a>
+                </div>
             </div>
-        </div>
 
-        <!-- Summary Section -->
-    <div id="summary-container-@dbId" class="mx-4 mb-3" style="display:none;">
-            <div class="card border-primary-subtle bg-primary-subtle">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-stars text-primary me-2"></i>
-                        <h6 class="mb-0 fw-bold text-primary">AI Summary</h6>
-                        <button type="button" class="btn-close ms-auto small" onclick="closeSummary('@dbId')"
-                        aria-label="Close"></button>
+            <!-- Diagnostics Section -->
+            <div id="diagnostics-container-@dbId" class="mx-4 diagnostics-transition">
+                <div class="card border-secondary-subtle bg-body-tertiary mb-3">
+                    <div class="card-header bg-transparent border-secondary-subtle d-flex justify-content-between align-items-center py-2 px-3">
+                        <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-card-heading me-2"></i>Message Headers</h6>
+                        <button type="button" class="btn-close small" onclick="closeDiagnostics('@dbId')" aria-label="Close"></button>
                     </div>
-                    <div id="summary-content-@dbId" class="small text-secondary-emphasis">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div> Generating summary...
+                    <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0 small" style="table-layout: fixed;">
+                            <thead class="bg-body-tertiary sticky-top">
+                                <tr>
+                                    <th style="width: 30%;">Header</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody class="font-monospace">
+                                @foreach (var header in Model.Headers)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold text-break pe-2">@header.Field</td>
+                                        <td class="text-break text-wrap">@header.Value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Security Banner -->
+            <!-- Summary Section -->
+    <div id="summary-container-@dbId" class="mx-4 mb-3" style="display:none;">
+                <div class="card border-primary-subtle bg-primary-subtle">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-stars text-primary me-2"></i>
+                            <h6 class="mb-0 fw-bold text-primary">AI Summary</h6>
+                            <button type="button" class="btn-close ms-auto small" onclick="closeSummary('@dbId')"
+                        aria-label="Close"></button>
+                        </div>
+                        <div id="summary-content-@dbId" class="small text-secondary-emphasis">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div> Generating summary...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Banner -->
         @if (ViewBag.IsContentBlocked == true)
         {
-            <div class="alert alert-warning d-flex align-items-center justify-content-between mx-4 mt-3 mb-0">
-                <div>
-                    <i class="bi bi-shield-exclamation me-2"></i>
-                    Some content in this message has been blocked because the sender isn't in your Safe senders list.
-                </div>
-                <div class="d-flex gap-2">
-                    <form asp-action="TrustSender" method="post" class="d-inline">
-                        <input type="hidden" name="email" value="@Model.From.Mailboxes.FirstOrDefault()?.Address" />
-                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                        <button type="submit" class="btn btn-sm btn-primary">Trust sender</button>
-                    </form>
-                    <a href="#" onclick="loadMessage('@dbId', true); return false;" class="btn btn-sm btn-secondary">Show
-                        blocked content</a>
-                </div>
-            </div>
+                    <div class="alert alert-warning d-flex align-items-center justify-content-between mx-4 mt-3 mb-0">
+                        <div>
+                            <i class="bi bi-shield-exclamation me-2"></i>
+                            Some content in this message has been blocked because the sender isn't in your Safe senders list.
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" onclick="trustSender('@Model.From.Mailboxes.FirstOrDefault()?.Address')"
+                class="btn btn-sm btn-primary">Trust sender</button>
+                            <a href="#" onclick="loadMessage('@dbId', true); return false;" class="btn btn-sm btn-secondary">Show
+                                blocked content</a>
+                        </div>
+                    </div>
         }
 
-        <!-- Header -->
+            <!-- Header -->
     <div class="px-4 pb-3 mb-2 border-bottom pt-3">
-            <h3 class="mb-3 fw-normal">@Model.Subject</h3>
-            <div class="d-flex align-items-center">
+                <h3 class="mb-3 fw-normal">@Model.Subject</h3>
+                <div class="d-flex align-items-center">
                 @{
                     var sender = Model.From.Mailboxes.FirstOrDefault();
                     var senderName = sender?.Name;
@@ -133,33 +192,33 @@ else
                     var avatarLetter = !string.IsNullOrEmpty(senderName) ? senderName[0] : (senderEmail?[0] ?? '?');
                     var displayName = !string.IsNullOrEmpty(senderName) ? senderName : senderEmail;
                 }
-                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                 style="width: 48px; height: 48px; font-size: 1.5rem; text-transform: uppercase;">
                     @avatarLetter
-                </div>
-                <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-baseline">
-                        <div class="fw-bold fs-5 text-truncate" style="max-width: 400px;" title="@displayName">
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                            <div class="fw-bold fs-5 text-truncate" style="max-width: 400px;" title="@displayName">
                             @displayName
                             @if (!string.IsNullOrEmpty(senderEmail))
                             {
-                                <a asp-controller="Contacts" asp-action="Create" asp-route-name="@senderName"
+                                        <a asp-controller="Contacts" asp-action="Create" asp-route-name="@senderName"
                             asp-route-email="@senderEmail" class="btn btn-sm btn-link text-secondary p-0 ms-2"
                             title="Add to Contacts">
-                                    <i class="bi bi-person-plus"></i>
-                                </a>
+                                            <i class="bi bi-person-plus"></i>
+                                        </a>
                             }
+                            </div>
+                            <div class="text-muted small">@Model.Date.ToString("ddd M/d/yyyy h:mm tt")</div>
                         </div>
-                        <div class="text-muted small">@Model.Date.ToString("ddd M/d/yyyy h:mm tt")</div>
-                    </div>
-                    <div class="text-muted small mt-0">
-                        To: @Model.To
-                    </div>
+                        <div class="text-muted small mt-0">
+                            To: @Model.To
+                        </div>
 
                     @if (Model.Headers.Contains("X-Labels"))
                     {
                         var labels = Model.Headers["X-Labels"].Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                        <div class="mt-2">
+                                <div class="mt-2">
                             @foreach (var label in labels)
                             {
                                 var trimmedLabel = label.Trim();
@@ -181,37 +240,37 @@ else
                                     badgeClass = "text-bg-primary";
                                 }
 
-                                <span class="badge @badgeClass me-1">@trimmedLabel</span>
+                                            <span class="badge @badgeClass me-1">@trimmedLabel</span>
                             }
-                        </div>
+                                </div>
                     }
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Body -->
+            <!-- Body -->
     <div class="flex-grow-1 email-body-container bg-white">
-            <iframe src="@Url.Action("Body", "Mail", new { id = dbId, showBlocked = ViewBag.ShowBlocked })"
+                <iframe src="@Url.Action("Body", "Mail", new { id = dbId, showBlocked = ViewBag.ShowBlocked })"
             style="width: 100%; height: 100%; border: none;" onload="applyMessageDarkMode(this)"></iframe>
-        </div>
+            </div>
 
-        <!-- Attachments -->
+            <!-- Attachments -->
         @if (Model.Attachments.Any())
         {
-            <div class="border-top pt-3 mt-3 px-4">
-                <h6 class="small text-muted text-uppercase fw-bold"><i class="bi bi-paperclip"></i> Attachments
-                    (@Model.Attachments.Count())</h6>
-                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <div class="border-top pt-3 mt-3 px-4">
+                        <h6 class="small text-muted text-uppercase fw-bold"><i class="bi bi-paperclip"></i> Attachments
+                            (@Model.Attachments.Count())</h6>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
                     @foreach (var attachment in Model.Attachments)
                     {
                         var fileName = attachment.ContentDisposition?.FileName ?? attachment.ContentType.Name ?? "unnamed";
-                        <a asp-action="DownloadAttachment" asp-route-id="@dbId" asp-route-fileName="@fileName"
+                                    <a asp-action="DownloadAttachment" asp-route-id="@dbId" asp-route-fileName="@fileName"
                 class="btn btn-sm btn-light border d-flex align-items-center">
-                            <i class="bi bi-file-earmark me-1"></i> @fileName
-                        </a>
+                                        <i class="bi bi-file-earmark me-1"></i> @fileName
+                                    </a>
                     }
-                </div>
-            </div>
+                        </div>
+                    </div>
         }
-    </div>
+        </div>
 }
